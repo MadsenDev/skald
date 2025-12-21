@@ -1,0 +1,784 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animated theme backgrounds */
+@keyframes aurora-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes sunset-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ocean-wave {
+  0%, 100% {
+    background-position: 0% 50%, 100% 50%, 0% 0%;
+  }
+  25% {
+    background-position: 25% 40%, 75% 60%, 0% 0%;
+  }
+  50% {
+    background-position: 50% 30%, 50% 70%, 0% 0%;
+  }
+  75% {
+    background-position: 75% 40%, 25% 60%, 0% 0%;
+  }
+}
+
+@keyframes galaxy-twinkle {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes fire-flicker {
+  0%, 100% {
+    opacity: 0.9;
+    background-position: 50% 100%, 50% 0%, 0% 0%;
+  }
+  25% {
+    opacity: 1;
+    background-position: 45% 95%, 55% 5%, 0% 0%;
+  }
+  50% {
+    opacity: 0.95;
+    background-position: 55% 105%, 45% -5%, 0% 0%;
+  }
+  75% {
+    opacity: 1;
+    background-position: 50% 98%, 50% 2%, 0% 0%;
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    filter: blur(0px);
+    background-position: 0% 0%, 100% 100%, 0% 0%;
+  }
+  50% {
+    opacity: 1;
+    filter: blur(1.5px);
+    background-position: 5% 5%, 95% 95%, 0% 0%;
+  }
+}
+
+/* Auto-link suggestion highlight in Monaco editor */
+.monaco-editor .auto-link-suggestion-highlight {
+  background-color: color-mix(in srgb, var(--theme-accent) 20%, transparent) !important;
+  border-bottom: 2px dashed var(--theme-accent) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.monaco-editor .auto-link-suggestion-highlight:hover {
+  background-color: color-mix(in srgb, var(--theme-accent) 30%, transparent) !important;
+  border-bottom-color: var(--theme-accent) !important;
+}
+
+/* Theme-specific animated backgrounds */
+/* All animations are applied to ::before pseudo-elements to avoid affecting the app content */
+
+[data-theme="aurora"] body {
+  position: relative;
+  background: #0a0e27;
+}
+
+[data-theme="aurora"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(-45deg, #0a0e27, #0f1629, #141b2b, #0a0e27);
+  background-size: 400% 400%;
+  animation: aurora-gradient 15s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="matrix"] body {
+  position: relative;
+  background: #000000;
+}
+
+[data-theme="matrix"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.03) 2px,
+      rgba(0, 255, 65, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="sunset"] body {
+  position: relative;
+  background: #1a0f0f;
+}
+
+[data-theme="sunset"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a0f0f 0%, #2a1f1f 25%, #3a2f2f 50%, #2a1f1f 75%, #1a0f0f 100%);
+  background-size: 400% 400%;
+  animation: aurora-gradient 20s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="ocean-wave"] body {
+  position: relative;
+  background: #001122;
+}
+
+[data-theme="ocean-wave"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(0, 188, 212, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 150, 200, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #001122 0%, #002244 50%, #003366 100%);
+  background-size: 200% 200%, 200% 200%, 100% 100%;
+  background-position: 0% 50%, 100% 50%, 0% 0%;
+  animation: ocean-wave 25s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="galaxy"] body {
+  position: relative;
+  background: #0a0a1a;
+}
+
+[data-theme="galaxy"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #0a0a1a 0%, #14142a 50%, #1e1e3a 100%);
+  background-size: 300% 300%, 300% 300%, 100% 100%;
+  background-position: 0% 50%, 100% 50%, 0% 0%;
+  animation: aurora-gradient 30s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="galaxy"] body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(2px 2px at 60% 70%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 80% 10%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(2px 2px at 90% 60%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 33% 80%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 10% 40%, rgba(255, 255, 255, 0.2), transparent);
+  background-size: 200% 200%, 150% 150%, 100% 100%, 120% 120%, 180% 180%, 140% 140%, 160% 160%;
+  opacity: 0.8;
+  animation: galaxy-twinkle 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="fire"] body {
+  position: relative;
+  background: #1a0a0a;
+}
+
+[data-theme="fire"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse at 50% 100%, rgba(255, 107, 0, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 140, 0, 0.15) 0%, transparent 50%),
+    linear-gradient(180deg, #1a0a0a 0%, #2a1414 50%, #3a1e1e 100%);
+  background-size: 200% 200%, 200% 200%, 100% 100%;
+  background-position: 50% 100%, 50% 0%, 0% 0%;
+  animation: fire-flicker 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="neon"] body {
+  position: relative;
+  background: #0a0a14;
+}
+
+[data-theme="neon"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, #0a0a14 0%, #141420 50%, #1e1e2c 100%);
+  background-size: 300% 300%, 300% 300%, 100% 100%;
+  background-position: 0% 0%, 100% 100%, 0% 0%;
+  animation: neon-pulse 10s ease infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="neon"] body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 98px,
+      rgba(255, 0, 255, 0.03) 100px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 98px,
+      rgba(0, 255, 255, 0.03) 100px
+    );
+  pointer-events: none;
+  z-index: 0;
+  animation: neon-pulse 5s ease infinite;
+}
+
+/* Ensure content is above animated backgrounds */
+[data-theme] #root,
+[data-theme] main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Theme CSS Variables - will be set dynamically */
+:root {
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f9fafb;
+  --theme-bg-tertiary: #f3f4f6;
+  --theme-text-primary: #111827;
+  --theme-text-secondary: #6b7280;
+  --theme-text-tertiary: #9ca3af;
+  --theme-border-primary: #e5e7eb;
+  --theme-border-secondary: #d1d5db;
+  --theme-accent: #4f46e5;
+  --theme-accent-hover: #4338ca;
+  --theme-accent-text: #ffffff;
+  --theme-success: #10b981;
+  --theme-warning: #f59e0b;
+  --theme-error: #ef4444;
+  --theme-info: #3b82f6;
+  --theme-hover: #f3f4f6;
+  --theme-active: #e5e7eb;
+  --theme-code-bg: #f3f4f6;
+  --theme-code-text: #111827;
+  --theme-blockquote-border: #d1d5db;
+  --theme-table-header-bg: #f9fafb;
+}
+
+/* Override Tailwind's default colors with theme variables */
+/* Apply to root and all children when data-theme is set */
+[data-theme],
+[data-theme] * {
+  /* Background colors */
+  --tw-bg-opacity: 1;
+}
+
+/* Override Tailwind divide utilities */
+[data-theme] .divide-y,
+[data-theme] .divide-gray-200,
+[data-theme] .divide-gray-300 {
+  border-color: var(--theme-border-primary) !important;
+}
+
+[data-theme] .bg-white,
+[data-theme] .bg-gray-50,
+[data-theme] .bg-gray-50 {
+  background-color: var(--theme-bg-primary) !important;
+}
+
+[data-theme] .bg-gray-100 {
+  background-color: var(--theme-bg-secondary) !important;
+}
+
+[data-theme] .bg-gray-200 {
+  background-color: var(--theme-border-primary) !important;
+}
+
+/* Text colors - comprehensive overrides */
+[data-theme] .text-gray-900,
+[data-theme] .text-gray-800,
+[data-theme] h1,
+[data-theme] h2,
+[data-theme] h3,
+[data-theme] h4,
+[data-theme] h5,
+[data-theme] h6 {
+  color: var(--theme-text-primary) !important;
+}
+
+[data-theme] .text-gray-700,
+[data-theme] .text-gray-600 {
+  color: var(--theme-text-secondary) !important;
+}
+
+[data-theme] .text-gray-500,
+[data-theme] .text-gray-400,
+[data-theme] .text-gray-300 {
+  color: var(--theme-text-tertiary) !important;
+}
+
+/* Exclude theme preview cards from ALL text color overrides - must come after general rules */
+/* Use unset to remove color property and allow inline styles to work */
+[data-theme] .theme-preview-card,
+[data-theme] .theme-preview-card *,
+[data-theme] .theme-preview-card span,
+[data-theme] .theme-preview-card p,
+[data-theme] .theme-preview-card div,
+[data-theme] .theme-preview-card .text-gray-900,
+[data-theme] .theme-preview-card .text-gray-800,
+[data-theme] .theme-preview-card .text-gray-700,
+[data-theme] .theme-preview-card .text-gray-600,
+[data-theme] .theme-preview-card .text-gray-500,
+[data-theme] .theme-preview-card .text-gray-400,
+[data-theme] .theme-preview-card .text-gray-300,
+[data-theme] .theme-preview-card h1,
+[data-theme] .theme-preview-card h2,
+[data-theme] .theme-preview-card h3,
+[data-theme] .theme-preview-card h4,
+[data-theme] .theme-preview-card h5,
+[data-theme] .theme-preview-card h6,
+[data-theme] .theme-preview-card .font-semibold,
+[data-theme] .theme-preview-card .font-medium,
+[data-theme] .theme-preview-card .font-bold {
+  color: unset !important;
+}
+
+/* White text - use accent text color for better contrast */
+[data-theme] .text-white {
+  color: var(--theme-accent-text) !important;
+}
+
+/* Form elements - comprehensive input styling */
+[data-theme] input,
+[data-theme] input[type="text"],
+[data-theme] input[type="number"],
+[data-theme] input[type="date"],
+[data-theme] input[type="email"],
+[data-theme] input[type="password"],
+[data-theme] input[type="search"],
+[data-theme] input[type="time"],
+[data-theme] input[type="url"],
+[data-theme] textarea,
+[data-theme] select {
+  background-color: var(--theme-bg-primary) !important;
+  color: var(--theme-text-primary) !important;
+  border-color: var(--theme-border-primary) !important;
+}
+
+/* Override Tailwind's bg-white on inputs */
+[data-theme] input.bg-white,
+[data-theme] textarea.bg-white,
+[data-theme] select.bg-white {
+  background-color: var(--theme-bg-primary) !important;
+}
+
+/* Ensure inputs with Tailwind classes still get theme colors */
+[data-theme] input.border-gray-300,
+[data-theme] textarea.border-gray-300,
+[data-theme] select.border-gray-300 {
+  border-color: var(--theme-border-primary) !important;
+}
+
+[data-theme] input.text-gray-900,
+[data-theme] input.text-gray-700,
+[data-theme] input.text-gray-600,
+[data-theme] textarea.text-gray-900,
+[data-theme] textarea.text-gray-700,
+[data-theme] textarea.text-gray-600,
+[data-theme] select.text-gray-900,
+[data-theme] select.text-gray-700,
+[data-theme] select.text-gray-600 {
+  color: var(--theme-text-primary) !important;
+}
+
+[data-theme] input::placeholder,
+[data-theme] textarea::placeholder {
+  color: var(--theme-text-tertiary) !important;
+  opacity: 0.7;
+}
+
+[data-theme] select option {
+  background-color: var(--theme-bg-primary) !important;
+  color: var(--theme-text-primary) !important;
+}
+
+/* Border colors */
+[data-theme] .border-gray-200,
+[data-theme] .border-gray-300,
+[data-theme] .border,
+[data-theme] .border-r,
+[data-theme] .border-b,
+[data-theme] .border-t {
+  border-color: var(--theme-border-primary) !important;
+}
+
+/* Hover states */
+[data-theme] .hover\:bg-gray-50:hover,
+[data-theme] .hover\:bg-gray-100:hover {
+  background-color: var(--theme-hover) !important;
+}
+
+[data-theme] .hover\:bg-gray-200:hover {
+  background-color: var(--theme-active) !important;
+}
+
+[data-theme] .hover\:text-gray-700:hover,
+[data-theme] .hover\:text-gray-600:hover {
+  color: var(--theme-text-secondary) !important;
+}
+
+/* Fix hover states: when buttons with white text get hover backgrounds, ensure text is readable */
+/* This handles the case where white text becomes invisible on light hover backgrounds in dark themes */
+[data-theme] button[class*="text-white"][class*="hover:bg-gray"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]) {
+  color: var(--theme-text-primary) !important;
+}
+
+/* Also handle buttons where text-white might be applied via theme overrides */
+[data-theme] button.text-white[class*="hover:bg-gray-50"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]),
+[data-theme] button.text-white[class*="hover:bg-gray-100"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]),
+[data-theme] button.text-white[class*="hover:bg-gray-200"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]) {
+  color: var(--theme-text-primary) !important;
+}
+
+/* Preserve explicit hover text colors when set */
+[data-theme] button[class*="hover:text-gray-700"]:hover,
+[data-theme] button[class*="hover:text-gray-600"]:hover,
+[data-theme] button[class*="hover:text-gray-500"]:hover {
+  color: var(--theme-text-secondary) !important;
+}
+
+/* Accent colors */
+[data-theme] .bg-indigo-600 {
+  background-color: var(--theme-accent) !important;
+}
+
+/* Selected button background - visible tint of accent color */
+[data-theme] .bg-indigo-50 {
+  /* Fallback for browsers that don't support color-mix */
+  background-color: var(--theme-bg-secondary) !important;
+  /* Use color-mix if supported for a subtle accent tint */
+  background-color: color-mix(in srgb, var(--theme-accent) 25%, var(--theme-bg-primary)) !important;
+}
+
+[data-theme] .bg-indigo-100 {
+  background-color: color-mix(in srgb, var(--theme-accent) 25%, var(--theme-bg-primary)) !important;
+}
+
+[data-theme] .text-indigo-600,
+[data-theme] .text-indigo-700,
+[data-theme] .text-indigo-800 {
+  color: var(--theme-accent) !important;
+}
+
+/* Selected button state - text should use accent color */
+[data-theme] .bg-indigo-50.text-indigo-600 {
+  color: var(--theme-accent) !important;
+}
+
+/* Icons in selected buttons - ensure they use accent color for visibility */
+[data-theme] .bg-indigo-50 svg,
+[data-theme] button.bg-indigo-50 svg {
+  color: var(--theme-accent) !important;
+  fill: var(--theme-accent) !important;
+}
+
+[data-theme] .hover\:bg-indigo-700:hover {
+  background-color: var(--theme-accent-hover) !important;
+}
+
+/* Settings modal specific overrides */
+[data-theme] .bg-white {
+  background-color: var(--theme-bg-primary) !important;
+}
+
+/* Ensure all text in modals is readable */
+[data-theme] .modal,
+[data-theme] [role="dialog"],
+[data-theme] .fixed {
+  color: var(--theme-text-primary) !important;
+}
+
+/* Labels and form text */
+[data-theme] label {
+  color: var(--theme-text-secondary) !important;
+}
+
+[data-theme] .font-medium,
+[data-theme] .font-semibold,
+[data-theme] .font-bold {
+  color: var(--theme-text-primary) !important;
+}
+
+/* Sidebar and navigation */
+[data-theme] aside,
+[data-theme] nav {
+  background-color: var(--theme-bg-primary) !important;
+  color: var(--theme-text-primary) !important;
+}
+
+[data-theme] .bg-gray-50 {
+  background-color: var(--theme-bg-secondary) !important;
+}
+
+/* Buttons with text-white should use readable color */
+[data-theme] button.text-white,
+[data-theme] .text-white {
+  color: var(--theme-accent-text) !important;
+}
+
+/* Vault selector primary button - always white text on accent background */
+[data-theme] .vault-select-button {
+  color: #ffffff !important;
+}
+
+/* Ensure selected/active states are readable */
+[data-theme] .bg-indigo-600.text-white,
+[data-theme] .bg-indigo-600 .text-white {
+  color: var(--theme-accent-text) !important;
+}
+
+/* Icons should inherit text color, but ensure visibility in selected buttons */
+[data-theme] svg {
+  color: inherit;
+  fill: currentColor;
+}
+
+[data-theme] .text-indigo-600 svg,
+[data-theme] button.text-indigo-600 svg,
+[data-theme] .bg-indigo-50 svg,
+[data-theme] button.bg-indigo-50 svg {
+  color: var(--theme-accent) !important;
+  fill: currentColor !important;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Custom titlebar - only the titlebar should be draggable */
+/* No global drag region - only TitleBar component has it */
+
+/* Markdown preview styles */
+.markdown-preview {
+  color: var(--theme-text-primary);
+}
+
+/* Code blocks - only style if NOT highlighted by highlight.js */
+.markdown-preview pre:not(.hljs) {
+  background-color: var(--theme-code-bg);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+/* Inline code - only style if NOT highlighted by highlight.js */
+.markdown-preview code:not(.hljs) {
+  background-color: var(--theme-code-bg);
+  color: var(--theme-code-text);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Highlight.js code blocks - let highlight.js handle styling */
+.markdown-preview pre.hljs {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.markdown-preview pre code.hljs {
+  background: transparent;
+  padding: 0;
+  display: block;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Ensure each line in code blocks has consistent height */
+.markdown-preview pre code.hljs,
+.markdown-preview pre code.hljs span {
+  line-height: 1.5;
+  vertical-align: baseline;
+}
+
+/* When line numbers are present, ensure code lines match line number height */
+.markdown-preview pre.hljs code.hljs {
+  line-height: 1.5;
+}
+
+.markdown-preview pre.hljs code.hljs > * {
+  line-height: 1.5;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid var(--theme-blockquote-border);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--theme-text-secondary);
+  margin: 1rem 0;
+}
+
+.markdown-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.markdown-preview table th,
+.markdown-preview table td {
+  border: 1px solid var(--theme-border-primary);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdown-preview table th {
+  background-color: var(--theme-table-header-bg);
+  font-weight: 600;
+}
+
+.markdown-preview a {
+  color: var(--theme-accent);
+  text-decoration: underline;
+}
+
+.markdown-preview a:hover {
+  color: var(--theme-accent-hover);
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Themed Scrollbars */
+/* Webkit browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-bg-secondary);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-border-secondary);
+  border-radius: 6px;
+  border: 2px solid var(--theme-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-border-primary);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--theme-bg-secondary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-secondary) var(--theme-bg-secondary);
+}
+

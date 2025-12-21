@@ -1,0 +1,444 @@
+/* Matrix Theme - Complete Terminal Transformation */
+
+/* Base styles - apply to html/root and body */
+html.theme-matrix,
+html[data-theme="matrix"] {
+  font-family: "Courier New", monospace !important;
+  font-size: 14px !important;
+  background: #000000 !important;
+  color: #00ff41 !important;
+}
+
+html.theme-matrix body,
+html[data-theme="matrix"] body {
+  font-family: "Courier New", monospace !important;
+  background: #000000 !important;
+  color: #00ff41 !important;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5), 0 0 10px rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Apply to all elements */
+html.theme-matrix *,
+html[data-theme="matrix"] * {
+  font-family: "Courier New", monospace !important;
+}
+
+/* Matrix rain background animation - moved to body::before for base effect */
+html.theme-matrix body::before,
+html[data-theme="matrix"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.03) 2px,
+      rgba(0, 255, 65, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+  animation: matrix-scan 8s linear infinite;
+}
+
+@keyframes matrix-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Scanlines effect */
+html.theme-matrix::after,
+html[data-theme="matrix"]::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Matrix Rain Animation Layer */
+.animation-layer-matrix {
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+/* Create multiple matrix rain columns using pseudo-elements */
+.animation-layer-matrix::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.1) 2px,
+      rgba(0, 255, 65, 0.1) 4px
+    );
+  animation: matrix-rain-fall 3s linear infinite;
+  pointer-events: none;
+}
+
+.animation-layer-matrix::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 19px,
+      rgba(0, 255, 65, 0.05) 20px,
+      rgba(0, 255, 65, 0.05) 21px
+    );
+  animation: matrix-rain-fall 4s linear infinite;
+  animation-delay: -1s;
+  pointer-events: none;
+}
+
+@keyframes matrix-rain-fall {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 0;
+  }
+}
+
+/* Additional matrix characters effect using multiple divs via CSS */
+.animation-layer-matrix {
+  background: transparent;
+  position: relative;
+}
+
+/* Create animated matrix characters using CSS content and multiple pseudo-elements */
+/* We'll use a data attribute approach for more control */
+.animation-layer-matrix {
+  --matrix-chars: "01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  color: #00ff41;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.8);
+}
+
+/* All text with glow */
+html.theme-matrix *,
+html[data-theme="matrix"] * {
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.4) !important;
+}
+
+html.theme-matrix h1,
+html.theme-matrix h2,
+html.theme-matrix h3,
+html.theme-matrix h4,
+html.theme-matrix h5,
+html.theme-matrix h6,
+html[data-theme="matrix"] h1,
+html[data-theme="matrix"] h2,
+html[data-theme="matrix"] h3,
+html[data-theme="matrix"] h4,
+html[data-theme="matrix"] h5,
+html[data-theme="matrix"] h6 {
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.8), 0 0 15px rgba(0, 255, 65, 0.5) !important;
+}
+
+/* Override ALL Tailwind background classes */
+html.theme-matrix .bg-white,
+html.theme-matrix .bg-gray-50,
+html.theme-matrix .bg-gray-100,
+html.theme-matrix .bg-gray-200,
+html[data-theme="matrix"] .bg-white,
+html[data-theme="matrix"] .bg-gray-50,
+html[data-theme="matrix"] .bg-gray-100,
+html[data-theme="matrix"] .bg-gray-200 {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Override ALL Tailwind text classes */
+html.theme-matrix .text-gray-900,
+html.theme-matrix .text-gray-800,
+html.theme-matrix .text-gray-700,
+html.theme-matrix .text-gray-600,
+html.theme-matrix .text-gray-500,
+html.theme-matrix .text-gray-400,
+html[data-theme="matrix"] .text-gray-900,
+html[data-theme="matrix"] .text-gray-800,
+html[data-theme="matrix"] .text-gray-700,
+html[data-theme="matrix"] .text-gray-600,
+html[data-theme="matrix"] .text-gray-500,
+html[data-theme="matrix"] .text-gray-400 {
+  color: #00ff41 !important;
+}
+
+/* Override ALL Tailwind border classes */
+html.theme-matrix .border-gray-200,
+html.theme-matrix .border-gray-300,
+html[data-theme="matrix"] .border-gray-200,
+html[data-theme="matrix"] .border-gray-300 {
+  border-color: rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Sidebar and main containers */
+html.theme-matrix aside,
+html[data-theme="matrix"] aside,
+html.theme-matrix [class*="sidebar"],
+html[data-theme="matrix"] [class*="sidebar"] {
+  background: #000000 !important;
+  border-color: rgba(0, 255, 65, 0.3) !important;
+  color: #00ff41 !important;
+}
+
+html.theme-matrix main,
+html[data-theme="matrix"] main {
+  background: #000000 !important;
+  color: #00ff41 !important;
+}
+
+/* Buttons - terminal style */
+html.theme-matrix button,
+html[data-theme="matrix"] button {
+  font-family: "Courier New", monospace !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid rgba(0, 255, 65, 0.5) !important;
+  color: #00ff41 !important;
+  padding: 8px 16px !important;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.8) !important;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 65, 0.3),
+    inset 0 0 10px rgba(0, 255, 65, 0.1) !important;
+  transition: all 0.2s !important;
+  border-radius: 0 !important;
+}
+
+html.theme-matrix button:hover,
+html[data-theme="matrix"] button:hover {
+  background: rgba(0, 255, 65, 0.1) !important;
+  border-color: #00ff41 !important;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 65, 0.6),
+    inset 0 0 15px rgba(0, 255, 65, 0.2) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 1) !important;
+  transform: translateY(-1px) !important;
+  color: #00ff41 !important;
+}
+
+html.theme-matrix button:active,
+html[data-theme="matrix"] button:active {
+  transform: translateY(0) !important;
+  box-shadow: 
+    0 0 15px rgba(0, 255, 65, 0.4),
+    inset 0 0 10px rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Inputs and textareas */
+html.theme-matrix input,
+html.theme-matrix textarea,
+html.theme-matrix select,
+html[data-theme="matrix"] input,
+html[data-theme="matrix"] textarea,
+html[data-theme="matrix"] select {
+  font-family: "Courier New", monospace !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(0, 255, 65, 0.4) !important;
+  color: #00ff41 !important;
+  padding: 8px !important;
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.5) !important;
+  box-shadow: 
+    0 0 8px rgba(0, 255, 65, 0.2),
+    inset 0 0 8px rgba(0, 255, 65, 0.05) !important;
+  border-radius: 0 !important;
+}
+
+html.theme-matrix input:focus,
+html.theme-matrix textarea:focus,
+html.theme-matrix select:focus,
+html[data-theme="matrix"] input:focus,
+html[data-theme="matrix"] textarea:focus,
+html[data-theme="matrix"] select:focus {
+  outline: none !important;
+  border-color: #00ff41 !important;
+  box-shadow: 
+    0 0 15px rgba(0, 255, 65, 0.5),
+    inset 0 0 10px rgba(0, 255, 65, 0.1) !important;
+}
+
+/* Cards and containers */
+html.theme-matrix [class*="card"],
+html.theme-matrix [class*="rounded"],
+html.theme-matrix [class*="border"],
+html[data-theme="matrix"] [class*="card"],
+html[data-theme="matrix"] [class*="rounded"],
+html[data-theme="matrix"] [class*="border"] {
+  border: 1px solid rgba(0, 255, 65, 0.3) !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 65, 0.2),
+    inset 0 0 10px rgba(0, 255, 65, 0.05) !important;
+  border-radius: 0 !important;
+}
+
+/* Links */
+html.theme-matrix a,
+html[data-theme="matrix"] a {
+  color: #00ffff !important;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.6) !important;
+  text-decoration: underline !important;
+}
+
+html.theme-matrix a:hover,
+html[data-theme="matrix"] a:hover {
+  color: #00ff41 !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.8) !important;
+}
+
+/* Scrollbars */
+html.theme-matrix ::-webkit-scrollbar,
+html[data-theme="matrix"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #000000;
+}
+
+html.theme-matrix ::-webkit-scrollbar-thumb,
+html[data-theme="matrix"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.3);
+  border: 1px solid rgba(0, 255, 65, 0.5);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+}
+
+html.theme-matrix ::-webkit-scrollbar-thumb:hover,
+html[data-theme="matrix"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+/* Remove all border radius */
+html.theme-matrix *,
+html[data-theme="matrix"] * {
+  border-radius: 0 !important;
+}
+
+/* Pulsing accent elements */
+html.theme-matrix [class*="accent"],
+html.theme-matrix [class*="primary"],
+html[data-theme="matrix"] [class*="accent"],
+html[data-theme="matrix"] [class*="primary"] {
+  animation: matrix-pulse 2s ease-in-out infinite;
+}
+
+@keyframes matrix-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+  }
+}
+
+/* TitleBar specific */
+html.theme-matrix [class*="TitleBar"],
+html[data-theme="matrix"] [class*="TitleBar"] {
+  background: #000000 !important;
+  border-color: rgba(0, 255, 65, 0.3) !important;
+  color: #00ff41 !important;
+}
+
+/* Sidebar specific - override all Tailwind classes */
+html.theme-matrix aside,
+html[data-theme="matrix"] aside {
+  background: #000000 !important;
+  background-color: #000000 !important;
+  border-right: 1px solid rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Note list items */
+html.theme-matrix [class*="note"],
+html[data-theme="matrix"] [class*="note"] {
+  color: #00ff41 !important;
+}
+
+html.theme-matrix [class*="selected"],
+html[data-theme="matrix"] [class*="selected"] {
+  background: rgba(0, 255, 65, 0.1) !important;
+  border-color: #00ff41 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Icons */
+html.theme-matrix svg,
+html[data-theme="matrix"] svg {
+  color: #00ff41 !important;
+  filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.6));
+}
+
+/* Monaco Editor - ensure it gets the theme */
+html.theme-matrix .monaco-editor,
+html[data-theme="matrix"] .monaco-editor {
+  background: #000000 !important;
+}
+
+html.theme-matrix .monaco-editor .margin,
+html[data-theme="matrix"] .monaco-editor .margin {
+  background: #000000 !important;
+}
+
+/* Override hover states */
+html.theme-matrix .hover\:bg-gray-50:hover,
+html.theme-matrix .hover\:bg-gray-100:hover,
+html[data-theme="matrix"] .hover\:bg-gray-50:hover,
+html[data-theme="matrix"] .hover\:bg-gray-100:hover {
+  background: rgba(0, 255, 65, 0.1) !important;
+  background-color: rgba(0, 255, 65, 0.1) !important;
+  color: #00ff41 !important;
+}
+
+html.theme-matrix .hover\:text-gray-700:hover,
+html.theme-matrix .hover\:text-gray-600:hover,
+html[data-theme="matrix"] .hover\:text-gray-700:hover,
+html[data-theme="matrix"] .hover\:text-gray-600:hover {
+  color: #00ff41 !important;
+}
+
+/* Selected/active states */
+html.theme-matrix .bg-indigo-50,
+html.theme-matrix .text-indigo-600,
+html[data-theme="matrix"] .bg-indigo-50,
+html[data-theme="matrix"] .text-indigo-600 {
+  background: rgba(0, 255, 65, 0.15) !important;
+  color: #00ff41 !important;
+  border-color: #00ff41 !important;
+}
+
+/* Ensure root container gets black background */
+html.theme-matrix #root,
+html[data-theme="matrix"] #root {
+  background: #000000 !important;
+}

@@ -1,0 +1,50 @@
+{
+  "id": "glitch",
+  "name": "Glitch",
+  "description": "Experimental glitch effects - for fun!",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#0a0a0a",
+    "bgSecondary": "#1a1a1a",
+    "bgTertiary": "#2a2a2a",
+    "textPrimary": "#00ff00",
+    "textSecondary": "#ff00ff",
+    "textTertiary": "#00ffff",
+    "borderPrimary": "#3a3a3a",
+    "borderSecondary": "#4a4a4a",
+    "accent": "#00ff00",
+    "accentHover": "#ff00ff",
+    "accentText": "#000000",
+    "success": "#00ff00",
+    "warning": "#ffff00",
+    "error": "#ff0000",
+    "info": "#00ffff",
+    "hover": "#1a1a1a",
+    "active": "#2a2a2a",
+    "codeBg": "#1a1a1a",
+    "codeText": "#00ff00",
+    "blockquoteBorder": "#ff00ff",
+    "tableHeaderBg": "#1a1a1a"
+  },
+  "monacoTheme": "vs-dark",
+  "fonts": {
+    "primary": "\"Courier New\", monospace",
+    "mono": "\"Courier New\", monospace",
+    "sizes": {
+      "base": "14px",
+      "small": "12px",
+      "large": "16px"
+    }
+  },
+  "animations": {
+    "enabled": true,
+    "glitch": true
+  },
+  "effects": {
+    "rgbShift": true,
+    "scanlines": true,
+    "noise": true,
+    "shake": true
+  }
+}
+

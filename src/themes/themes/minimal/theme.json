@@ -1,0 +1,47 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "description": "Ultra clean, borderless design",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#ffffff",
+    "bgSecondary": "#fafafa",
+    "bgTertiary": "#f5f5f5",
+    "textPrimary": "#1a1a1a",
+    "textSecondary": "#666666",
+    "textTertiary": "#999999",
+    "borderPrimary": "transparent",
+    "borderSecondary": "transparent",
+    "accent": "#1a1a1a",
+    "accentHover": "#333333",
+    "accentText": "#ffffff",
+    "success": "#1a1a1a",
+    "warning": "#1a1a1a",
+    "error": "#1a1a1a",
+    "info": "#1a1a1a",
+    "hover": "#f5f5f5",
+    "active": "#f0f0f0",
+    "codeBg": "#fafafa",
+    "codeText": "#1a1a1a",
+    "blockquoteBorder": "transparent",
+    "tableHeaderBg": "#fafafa"
+  },
+  "monacoTheme": "vs",
+  "fonts": {
+    "primary": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "sizes": {
+      "base": "15px",
+      "small": "13px",
+      "large": "17px"
+    }
+  },
+  "animations": {
+    "enabled": false
+  },
+  "effects": {
+    "borderless": true,
+    "shadowless": true,
+    "spacing": "generous"
+  }
+}
+

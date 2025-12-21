@@ -1,0 +1,48 @@
+{
+  "id": "fire",
+  "name": "Fire",
+  "description": "Burning flames from below",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#1a0a0a",
+    "bgSecondary": "#2a1414",
+    "bgTertiary": "#3a1e1e",
+    "textPrimary": "#ff6b00",
+    "textSecondary": "#ff8c00",
+    "textTertiary": "#ffa500",
+    "borderPrimary": "#4a2828",
+    "borderSecondary": "#5a3232",
+    "accent": "#ff6b00",
+    "accentHover": "#ff8c00",
+    "accentText": "#ffffff",
+    "success": "#00ff41",
+    "warning": "#ffaa00",
+    "error": "#ff0044",
+    "info": "#ff6b00",
+    "hover": "#2a1414",
+    "active": "#3a1e1e",
+    "codeBg": "#2a1414",
+    "codeText": "#ff8c00",
+    "blockquoteBorder": "#ff6b00",
+    "tableHeaderBg": "#2a1414"
+  },
+  "monacoTheme": "vs-dark",
+  "fonts": {
+    "primary": "\"Courier New\", monospace",
+    "mono": "\"Courier New\", monospace",
+    "sizes": {
+      "base": "14px",
+      "small": "12px",
+      "large": "16px"
+    }
+  },
+  "animations": {
+    "enabled": true,
+    "fire": true
+  },
+  "effects": {
+    "glow": true,
+    "heat": true
+  }
+}
+

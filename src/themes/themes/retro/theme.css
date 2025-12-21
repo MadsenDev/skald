@@ -1,0 +1,178 @@
+/* Retro Terminal Theme - 80s Computer Aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+.theme-retro {
+  font-family: "VT323", "Courier New", monospace !important;
+  font-size: 20px !important;
+  letter-spacing: 1px !important;
+  background: #1a1a2e !important;
+  color: #00ff88 !important;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Remove all border radius */
+.theme-retro *,
+.theme-retro *::before,
+.theme-retro *::after {
+  border-radius: 0 !important;
+}
+
+/* Buttons - retro box shadow style */
+.theme-retro button {
+  font-family: "VT323", "Courier New", monospace !important;
+  font-size: 20px !important;
+  background: #16213e !important;
+  border: 3px solid #e94560 !important;
+  color: #00ff88 !important;
+  padding: 10px 20px !important;
+  box-shadow: 6px 6px 0px #e94560 !important;
+  transition: all 0.1s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  position: relative !important;
+}
+
+.theme-retro button:hover {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 3px 3px 0px #e94560 !important;
+  background: #0f3460 !important;
+}
+
+.theme-retro button:active {
+  transform: translate(6px, 6px) !important;
+  box-shadow: 0px 0px 0px #e94560 !important;
+}
+
+/* Inputs */
+.theme-retro input,
+.theme-retro textarea,
+.theme-retro select {
+  font-family: "VT323", "Courier New", monospace !important;
+  font-size: 20px !important;
+  background: #16213e !important;
+  border: 3px solid #533483 !important;
+  color: #00ff88 !important;
+  padding: 10px !important;
+  box-shadow: 4px 4px 0px #533483 !important;
+  letter-spacing: 1px !important;
+}
+
+.theme-retro input:focus,
+.theme-retro textarea:focus,
+.theme-retro select:focus {
+  outline: none !important;
+  border-color: #e94560 !important;
+  box-shadow: 4px 4px 0px #e94560 !important;
+}
+
+/* Cards and containers */
+.theme-retro [class*="card"],
+.theme-retro [class*="rounded"],
+.theme-retro [class*="border"] {
+  border: 3px solid #533483 !important;
+  background: #16213e !important;
+  box-shadow: 8px 8px 0px #533483 !important;
+  padding: 20px !important;
+}
+
+/* Modal */
+.theme-retro [role="dialog"],
+.theme-retro .modal {
+  border: 4px solid #e94560 !important;
+  box-shadow: 12px 12px 0px #e94560 !important;
+  background: #16213e !important;
+}
+
+/* Sidebar */
+.theme-retro aside,
+.theme-retro [class*="sidebar"] {
+  border-right: 3px solid #533483 !important;
+  box-shadow: 3px 0px 0px #533483 !important;
+}
+
+/* Headings */
+.theme-retro h1,
+.theme-retro h2,
+.theme-retro h3,
+.theme-retro h4,
+.theme-retro h5,
+.theme-retro h6 {
+  font-family: "VT323", "Courier New", monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3px !important;
+  color: #e94560 !important;
+  text-shadow: 3px 3px 0px #533483 !important;
+}
+
+/* Links */
+.theme-retro a {
+  color: #00a8ff !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+}
+
+.theme-retro a:hover {
+  color: #e94560 !important;
+  text-shadow: 2px 2px 0px #533483 !important;
+}
+
+/* Scrollbars */
+.theme-retro ::-webkit-scrollbar {
+  width: 16px;
+  background: #0f3460;
+  border: 2px solid #533483;
+}
+
+.theme-retro ::-webkit-scrollbar-thumb {
+  background: #e94560;
+  border: 2px solid #533483;
+  box-shadow: 3px 3px 0px #533483;
+}
+
+.theme-retro ::-webkit-scrollbar-thumb:hover {
+  background: #ff6b8a;
+}
+
+/* Tables */
+.theme-retro table {
+  border: 3px solid #533483 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.theme-retro th,
+.theme-retro td {
+  border: 2px solid #533483 !important;
+  padding: 10px !important;
+}
+
+.theme-retro th {
+  background: #0f3460 !important;
+  border-bottom: 3px solid #e94560 !important;
+}
+
+/* Code blocks */
+.theme-retro pre,
+.theme-retro code {
+  font-family: "VT323", "Courier New", monospace !important;
+  border: 2px solid #533483 !important;
+  box-shadow: 4px 4px 0px #533483 !important;
+  background: #0f3460 !important;
+}
+
+/* Glitch effect on hover for special elements */
+.theme-retro [class*="accent"]:hover {
+  animation: retro-glitch 0.3s infinite;
+}
+
+@keyframes retro-glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+

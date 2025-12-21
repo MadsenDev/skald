@@ -1,0 +1,31 @@
+{
+  "id": "dark",
+  "name": "Dark",
+  "description": "Easy on the eyes",
+  "category": "standard",
+  "colors": {
+    "bgPrimary": "#1f2937",
+    "bgSecondary": "#111827",
+    "bgTertiary": "#0f172a",
+    "textPrimary": "#f9fafb",
+    "textSecondary": "#d1d5db",
+    "textTertiary": "#9ca3af",
+    "borderPrimary": "#374151",
+    "borderSecondary": "#4b5563",
+    "accent": "#6366f1",
+    "accentHover": "#818cf8",
+    "accentText": "#ffffff",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#3b82f6",
+    "hover": "#374151",
+    "active": "#4b5563",
+    "codeBg": "#111827",
+    "codeText": "#f9fafb",
+    "blockquoteBorder": "#4b5563",
+    "tableHeaderBg": "#111827"
+  },
+  "monacoTheme": "vs-dark"
+}
+

@@ -1,0 +1,241 @@
+/* Glitch Theme - Experimental Glitch Effects */
+
+/* Base styles */
+html.theme-glitch,
+html[data-theme="glitch"] {
+  font-family: "Courier New", monospace !important;
+  background: #0a0a0a !important;
+  color: #00ff00 !important;
+  overflow-x: hidden !important;
+}
+
+html.theme-glitch body,
+html[data-theme="glitch"] body {
+  font-family: "Courier New", monospace !important;
+  background: #0a0a0a !important;
+  color: #00ff00 !important;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5) !important;
+  position: relative !important;
+}
+
+/* Glitch animation for the entire app */
+@keyframes glitch-shake {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-2px, 2px); }
+  20% { transform: translate(2px, -2px); }
+  30% { transform: translate(-2px, -2px); }
+  40% { transform: translate(2px, 2px); }
+  50% { transform: translate(-2px, 2px); }
+  60% { transform: translate(2px, -2px); }
+  70% { transform: translate(-2px, -2px); }
+  80% { transform: translate(2px, 2px); }
+  90% { transform: translate(-2px, 2px); }
+}
+
+@keyframes glitch-rgb-shift {
+  0%, 100% { 
+    filter: hue-rotate(0deg);
+  }
+  10% { 
+    filter: hue-rotate(90deg);
+  }
+  20% { 
+    filter: hue-rotate(180deg);
+  }
+  30% { 
+    filter: hue-rotate(270deg);
+  }
+  40% { 
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes glitch-scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Apply glitch effects randomly */
+html.theme-glitch #root,
+html[data-theme="glitch"] #root {
+  animation: glitch-shake 0.3s infinite;
+  position: relative;
+}
+
+/* RGB shift effect on random intervals */
+html.theme-glitch #root::before,
+html[data-theme="glitch"] #root::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.1) 0%,
+    transparent 2%,
+    transparent 98%,
+    rgba(0, 255, 255, 0.1) 100%
+  );
+  animation: glitch-rgb-shift 0.5s infinite;
+  opacity: 0;
+  animation-delay: 0s;
+}
+
+html.theme-glitch #root::after,
+html[data-theme="glitch"] #root::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 0, 0.03) 2px,
+    rgba(0, 255, 0, 0.03) 4px
+  );
+  animation: glitch-scanline 8s linear infinite;
+}
+
+/* All text with glitch effect */
+html.theme-glitch *,
+html[data-theme="glitch"] * {
+  font-family: "Courier New", monospace !important;
+  text-shadow: 0 0 3px rgba(0, 255, 0, 0.4) !important;
+}
+
+/* Override Tailwind backgrounds */
+html.theme-glitch .bg-white,
+html.theme-glitch .bg-gray-50,
+html.theme-glitch .bg-gray-100,
+html.theme-glitch .bg-gray-200,
+html[data-theme="glitch"] .bg-white,
+html[data-theme="glitch"] .bg-gray-50,
+html[data-theme="glitch"] .bg-gray-100,
+html[data-theme="glitch"] .bg-gray-200 {
+  background: #0a0a0a !important;
+  background-color: #0a0a0a !important;
+}
+
+/* Override Tailwind text */
+html.theme-glitch .text-gray-900,
+html.theme-glitch .text-gray-800,
+html.theme-glitch .text-gray-700,
+html.theme-glitch .text-gray-600,
+html.theme-glitch .text-gray-500,
+html[data-theme="glitch"] .text-gray-900,
+html[data-theme="glitch"] .text-gray-800,
+html[data-theme="glitch"] .text-gray-700,
+html[data-theme="glitch"] .text-gray-600,
+html[data-theme="glitch"] .text-gray-500 {
+  color: #00ff00 !important;
+}
+
+/* Override borders */
+html.theme-glitch .border-gray-200,
+html.theme-glitch .border-gray-300,
+html[data-theme="glitch"] .border-gray-200,
+html[data-theme="glitch"] .border-gray-300 {
+  border-color: rgba(0, 255, 0, 0.3) !important;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.2) !important;
+}
+
+/* Buttons with glitch effect */
+html.theme-glitch button,
+html[data-theme="glitch"] button {
+  background: rgba(10, 10, 10, 0.8) !important;
+  border: 1px solid rgba(0, 255, 0, 0.5) !important;
+  color: #00ff00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.8) !important;
+}
+
+html.theme-glitch button:hover,
+html[data-theme="glitch"] button:hover {
+  background: rgba(0, 255, 0, 0.1) !important;
+  border-color: #00ff00 !important;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 1) !important;
+  animation: glitch-shake 0.1s infinite;
+}
+
+/* Inputs */
+html.theme-glitch input,
+html.theme-glitch textarea,
+html.theme-glitch select,
+html[data-theme="glitch"] input,
+html[data-theme="glitch"] textarea,
+html[data-theme="glitch"] select {
+  background: rgba(10, 10, 10, 0.9) !important;
+  border: 1px solid rgba(0, 255, 0, 0.4) !important;
+  color: #00ff00 !important;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.2) !important;
+}
+
+html.theme-glitch input:focus,
+html.theme-glitch textarea:focus,
+html.theme-glitch select:focus,
+html[data-theme="glitch"] input:focus,
+html[data-theme="glitch"] textarea:focus,
+html[data-theme="glitch"] select:focus {
+  border-color: #00ff00 !important;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5) !important;
+  animation: glitch-shake 0.05s infinite;
+}
+
+/* Sidebar */
+html.theme-glitch aside,
+html[data-theme="glitch"] aside {
+  background: #0a0a0a !important;
+  border-right: 1px solid rgba(0, 255, 0, 0.3) !important;
+  box-shadow: 2px 0 10px rgba(0, 255, 0, 0.1) !important;
+}
+
+/* Scrollbars */
+html.theme-glitch ::-webkit-scrollbar,
+html[data-theme="glitch"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #0a0a0a;
+}
+
+html.theme-glitch ::-webkit-scrollbar-thumb,
+html[data-theme="glitch"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 0, 0.3);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+html.theme-glitch ::-webkit-scrollbar-thumb:hover,
+html[data-theme="glitch"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* Icons */
+html.theme-glitch svg,
+html[data-theme="glitch"] svg {
+  color: #00ff00 !important;
+  filter: drop-shadow(0 0 3px rgba(0, 255, 0, 0.8));
+}
+
+/* Monaco Editor */
+html.theme-glitch .monaco-editor,
+html[data-theme="glitch"] .monaco-editor {
+  background: #0a0a0a !important;
+}
+
+/* Random glitch on elements */
+html.theme-glitch [class*="note"]:hover,
+html[data-theme="glitch"] [class*="note"]:hover {
+  animation: glitch-shake 0.2s infinite;
+}
+

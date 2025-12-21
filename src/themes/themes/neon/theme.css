@@ -1,0 +1,164 @@
+/* Neon Cyberpunk Theme */
+
+/* Base styles */
+html.theme-neon,
+html[data-theme="neon"] {
+  font-family: "Courier New", monospace !important;
+  background: #0a0a14 !important;
+  color: #00ffff !important;
+}
+
+html.theme-neon body,
+html[data-theme="neon"] body {
+  font-family: "Courier New", monospace !important;
+  background: #0a0a14 !important;
+  color: #00ffff !important;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5), 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* All text with neon glow */
+html.theme-neon *,
+html[data-theme="neon"] * {
+  font-family: "Courier New", monospace !important;
+  text-shadow: 0 0 3px rgba(0, 255, 255, 0.4) !important;
+}
+
+/* Override Tailwind backgrounds */
+html.theme-neon .bg-white,
+html.theme-neon .bg-gray-50,
+html.theme-neon .bg-gray-100,
+html.theme-neon .bg-gray-200,
+html[data-theme="neon"] .bg-white,
+html[data-theme="neon"] .bg-gray-50,
+html[data-theme="neon"] .bg-gray-100,
+html[data-theme="neon"] .bg-gray-200 {
+  background: #0a0a14 !important;
+  background-color: #0a0a14 !important;
+}
+
+/* Override Tailwind text */
+html.theme-neon .text-gray-900,
+html.theme-neon .text-gray-800,
+html.theme-neon .text-gray-700,
+html.theme-neon .text-gray-600,
+html.theme-neon .text-gray-500,
+html[data-theme="neon"] .text-gray-900,
+html[data-theme="neon"] .text-gray-800,
+html[data-theme="neon"] .text-gray-700,
+html[data-theme="neon"] .text-gray-600,
+html[data-theme="neon"] .text-gray-500 {
+  color: #00ffff !important;
+}
+
+/* Override borders */
+html.theme-neon .border-gray-200,
+html.theme-neon .border-gray-300,
+html[data-theme="neon"] .border-gray-200,
+html[data-theme="neon"] .border-gray-300 {
+  border-color: rgba(0, 255, 255, 0.3) !important;
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.2) !important;
+}
+
+/* Buttons with neon glow */
+html.theme-neon button,
+html[data-theme="neon"] button {
+  background: rgba(10, 10, 20, 0.8) !important;
+  border: 1px solid rgba(0, 255, 255, 0.5) !important;
+  color: #00ffff !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1) !important;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.8) !important;
+}
+
+html.theme-neon button:hover,
+html[data-theme="neon"] button:hover {
+  background: rgba(0, 255, 255, 0.1) !important;
+  border-color: #00ffff !important;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), inset 0 0 15px rgba(0, 255, 255, 0.2) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 1) !important;
+}
+
+/* Inputs */
+html.theme-neon input,
+html.theme-neon textarea,
+html.theme-neon select,
+html[data-theme="neon"] input,
+html[data-theme="neon"] textarea,
+html[data-theme="neon"] select {
+  background: rgba(10, 10, 20, 0.9) !important;
+  border: 1px solid rgba(0, 255, 255, 0.4) !important;
+  color: #00ffff !important;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2), inset 0 0 8px rgba(0, 255, 255, 0.05) !important;
+}
+
+html.theme-neon input:focus,
+html.theme-neon textarea:focus,
+html.theme-neon select:focus,
+html[data-theme="neon"] input:focus,
+html[data-theme="neon"] textarea:focus,
+html[data-theme="neon"] select:focus {
+  border-color: #00ffff !important;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.1) !important;
+}
+
+/* Sidebar */
+html.theme-neon aside,
+html[data-theme="neon"] aside {
+  background: #0a0a14 !important;
+  border-right: 1px solid rgba(0, 255, 255, 0.3) !important;
+  box-shadow: 2px 0 10px rgba(0, 255, 255, 0.1) !important;
+}
+
+/* Scrollbars */
+html.theme-neon ::-webkit-scrollbar,
+html[data-theme="neon"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #0a0a14;
+}
+
+html.theme-neon ::-webkit-scrollbar-thumb,
+html[data-theme="neon"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+}
+
+html.theme-neon ::-webkit-scrollbar-thumb:hover,
+html[data-theme="neon"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+/* Icons with neon glow */
+html.theme-neon svg,
+html[data-theme="neon"] svg {
+  color: #00ffff !important;
+  filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.8));
+}
+
+/* Monaco Editor */
+html.theme-neon .monaco-editor,
+html[data-theme="neon"] .monaco-editor {
+  background: #0a0a14 !important;
+}
+
+/* Root container */
+html.theme-neon #root,
+html[data-theme="neon"] #root {
+  background: #0a0a14 !important;
+}
+
+/* Pulsing accent elements */
+html.theme-neon [class*="accent"],
+html[data-theme="neon"] [class*="accent"] {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
+  }
+}
+

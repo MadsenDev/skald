@@ -1,0 +1,140 @@
+/* Ocean Theme - Calm Waves */
+
+/* Base styles */
+html.theme-ocean,
+html[data-theme="ocean"] {
+  background: #001122 !important;
+  color: #00bcd4 !important;
+}
+
+html.theme-ocean body,
+html[data-theme="ocean"] body {
+  background: #001122 !important;
+  color: #00bcd4 !important;
+  text-shadow: 0 0 5px rgba(0, 188, 212, 0.3) !important;
+}
+
+/* All text */
+html.theme-ocean *,
+html[data-theme="ocean"] * {
+  text-shadow: 0 0 2px rgba(0, 188, 212, 0.2) !important;
+}
+
+/* Override Tailwind backgrounds */
+html.theme-ocean .bg-white,
+html.theme-ocean .bg-gray-50,
+html.theme-ocean .bg-gray-100,
+html.theme-ocean .bg-gray-200,
+html[data-theme="ocean"] .bg-white,
+html[data-theme="ocean"] .bg-gray-50,
+html[data-theme="ocean"] .bg-gray-100,
+html[data-theme="ocean"] .bg-gray-200 {
+  background: #001122 !important;
+  background-color: #001122 !important;
+}
+
+/* Override Tailwind text */
+html.theme-ocean .text-gray-900,
+html.theme-ocean .text-gray-800,
+html.theme-ocean .text-gray-700,
+html.theme-ocean .text-gray-600,
+html.theme-ocean .text-gray-500,
+html[data-theme="ocean"] .text-gray-900,
+html[data-theme="ocean"] .text-gray-800,
+html[data-theme="ocean"] .text-gray-700,
+html[data-theme="ocean"] .text-gray-600,
+html[data-theme="ocean"] .text-gray-500 {
+  color: #00bcd4 !important;
+}
+
+/* Override borders */
+html.theme-ocean .border-gray-200,
+html.theme-ocean .border-gray-300,
+html[data-theme="ocean"] .border-gray-200,
+html[data-theme="ocean"] .border-gray-300 {
+  border-color: rgba(0, 188, 212, 0.3) !important;
+}
+
+/* Buttons */
+html.theme-ocean button,
+html[data-theme="ocean"] button {
+  background: rgba(0, 17, 34, 0.8) !important;
+  border: 1px solid rgba(0, 188, 212, 0.5) !important;
+  color: #00bcd4 !important;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.2) !important;
+}
+
+html.theme-ocean button:hover,
+html[data-theme="ocean"] button:hover {
+  background: rgba(0, 188, 212, 0.1) !important;
+  border-color: #00bcd4 !important;
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.4) !important;
+  color: #00e5ff !important;
+}
+
+/* Inputs */
+html.theme-ocean input,
+html.theme-ocean textarea,
+html.theme-ocean select,
+html[data-theme="ocean"] input,
+html[data-theme="ocean"] textarea,
+html[data-theme="ocean"] select {
+  background: rgba(0, 17, 34, 0.9) !important;
+  border: 1px solid rgba(0, 188, 212, 0.4) !important;
+  color: #00bcd4 !important;
+}
+
+html.theme-ocean input:focus,
+html.theme-ocean textarea:focus,
+html.theme-ocean select:focus,
+html[data-theme="ocean"] input:focus,
+html[data-theme="ocean"] textarea:focus,
+html[data-theme="ocean"] select:focus {
+  border-color: #00bcd4 !important;
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.4) !important;
+}
+
+/* Sidebar */
+html.theme-ocean aside,
+html[data-theme="ocean"] aside {
+  background: #001122 !important;
+  border-right: 1px solid rgba(0, 188, 212, 0.3) !important;
+}
+
+/* Scrollbars */
+html.theme-ocean ::-webkit-scrollbar,
+html[data-theme="ocean"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #001122;
+}
+
+html.theme-ocean ::-webkit-scrollbar-thumb,
+html[data-theme="ocean"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 188, 212, 0.3);
+  border: 1px solid rgba(0, 188, 212, 0.5);
+}
+
+html.theme-ocean ::-webkit-scrollbar-thumb:hover,
+html[data-theme="ocean"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 188, 212, 0.5);
+}
+
+/* Icons */
+html.theme-ocean svg,
+html[data-theme="ocean"] svg {
+  color: #00bcd4 !important;
+  filter: drop-shadow(0 0 3px rgba(0, 188, 212, 0.4));
+}
+
+/* Monaco Editor */
+html.theme-ocean .monaco-editor,
+html[data-theme="ocean"] .monaco-editor {
+  background: #001122 !important;
+}
+
+/* Root container */
+html.theme-ocean #root,
+html[data-theme="ocean"] #root {
+  background: #001122 !important;
+}
+

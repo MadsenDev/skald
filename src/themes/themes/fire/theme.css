@@ -1,0 +1,149 @@
+/* Fire Theme - Burning Flames */
+
+/* Base styles */
+html.theme-fire,
+html[data-theme="fire"] {
+  font-family: "Courier New", monospace !important;
+  background: #1a0a0a !important;
+  color: #ff6b00 !important;
+}
+
+html.theme-fire body,
+html[data-theme="fire"] body {
+  font-family: "Courier New", monospace !important;
+  background: #1a0a0a !important;
+  color: #ff6b00 !important;
+  text-shadow: 0 0 5px rgba(255, 107, 0, 0.5), 0 0 10px rgba(255, 140, 0, 0.3) !important;
+}
+
+/* All text with glow */
+html.theme-fire *,
+html[data-theme="fire"] * {
+  font-family: "Courier New", monospace !important;
+  text-shadow: 0 0 3px rgba(255, 107, 0, 0.4) !important;
+}
+
+/* Override Tailwind backgrounds */
+html.theme-fire .bg-white,
+html.theme-fire .bg-gray-50,
+html.theme-fire .bg-gray-100,
+html.theme-fire .bg-gray-200,
+html[data-theme="fire"] .bg-white,
+html[data-theme="fire"] .bg-gray-50,
+html[data-theme="fire"] .bg-gray-100,
+html[data-theme="fire"] .bg-gray-200 {
+  background: #1a0a0a !important;
+  background-color: #1a0a0a !important;
+}
+
+/* Override Tailwind text */
+html.theme-fire .text-gray-900,
+html.theme-fire .text-gray-800,
+html.theme-fire .text-gray-700,
+html.theme-fire .text-gray-600,
+html.theme-fire .text-gray-500,
+html[data-theme="fire"] .text-gray-900,
+html[data-theme="fire"] .text-gray-800,
+html[data-theme="fire"] .text-gray-700,
+html[data-theme="fire"] .text-gray-600,
+html[data-theme="fire"] .text-gray-500 {
+  color: #ff6b00 !important;
+}
+
+/* Override borders */
+html.theme-fire .border-gray-200,
+html.theme-fire .border-gray-300,
+html[data-theme="fire"] .border-gray-200,
+html[data-theme="fire"] .border-gray-300 {
+  border-color: rgba(255, 107, 0, 0.3) !important;
+}
+
+/* Buttons */
+html.theme-fire button,
+html[data-theme="fire"] button {
+  background: rgba(26, 10, 10, 0.8) !important;
+  border: 1px solid rgba(255, 107, 0, 0.5) !important;
+  color: #ff6b00 !important;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.3) !important;
+}
+
+html.theme-fire button:hover,
+html[data-theme="fire"] button:hover {
+  background: rgba(255, 107, 0, 0.1) !important;
+  border-color: #ff6b00 !important;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.6) !important;
+  color: #ff8c00 !important;
+}
+
+/* Inputs */
+html.theme-fire input,
+html.theme-fire textarea,
+html.theme-fire select,
+html[data-theme="fire"] input,
+html[data-theme="fire"] textarea,
+html[data-theme="fire"] select {
+  background: rgba(26, 10, 10, 0.9) !important;
+  border: 1px solid rgba(255, 107, 0, 0.4) !important;
+  color: #ff6b00 !important;
+}
+
+html.theme-fire input:focus,
+html.theme-fire textarea:focus,
+html.theme-fire select:focus,
+html[data-theme="fire"] input:focus,
+html[data-theme="fire"] textarea:focus,
+html[data-theme="fire"] select:focus {
+  border-color: #ff6b00 !important;
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.5) !important;
+}
+
+/* Sidebar */
+html.theme-fire aside,
+html[data-theme="fire"] aside {
+  background: #1a0a0a !important;
+  border-right: 1px solid rgba(255, 107, 0, 0.3) !important;
+}
+
+/* Scrollbars */
+html.theme-fire ::-webkit-scrollbar,
+html[data-theme="fire"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #1a0a0a;
+}
+
+html.theme-fire ::-webkit-scrollbar-thumb,
+html[data-theme="fire"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 0, 0.3);
+  border: 1px solid rgba(255, 107, 0, 0.5);
+}
+
+html.theme-fire ::-webkit-scrollbar-thumb:hover,
+html[data-theme="fire"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.5);
+}
+
+/* Remove border radius */
+html.theme-fire *,
+html[data-theme="fire"] * {
+  border-radius: 0 !important;
+}
+
+/* Icons */
+html.theme-fire svg,
+html[data-theme="fire"] svg {
+  color: #ff6b00 !important;
+  filter: drop-shadow(0 0 3px rgba(255, 107, 0, 0.6));
+}
+
+/* Monaco Editor */
+html.theme-fire .monaco-editor,
+html[data-theme="fire"] .monaco-editor {
+  background: #1a0a0a !important;
+}
+
+/* Root container */
+html.theme-fire #root,
+html[data-theme="fire"] #root {
+  background: #1a0a0a !important;
+}
+

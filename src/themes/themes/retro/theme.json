@@ -1,0 +1,48 @@
+{
+  "id": "retro",
+  "name": "Retro Terminal",
+  "description": "80s computer aesthetic with pixel fonts",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#1a1a2e",
+    "bgSecondary": "#16213e",
+    "bgTertiary": "#0f3460",
+    "textPrimary": "#00ff88",
+    "textSecondary": "#00cc6a",
+    "textTertiary": "#00994d",
+    "borderPrimary": "#533483",
+    "borderSecondary": "#e94560",
+    "accent": "#e94560",
+    "accentHover": "#ff6b8a",
+    "accentText": "#ffffff",
+    "success": "#00ff88",
+    "warning": "#ffaa00",
+    "error": "#ff0044",
+    "info": "#00a8ff",
+    "hover": "#16213e",
+    "active": "#0f3460",
+    "codeBg": "#16213e",
+    "codeText": "#00ff88",
+    "blockquoteBorder": "#e94560",
+    "tableHeaderBg": "#16213e"
+  },
+  "monacoTheme": "vs-dark",
+  "fonts": {
+    "primary": "\"VT323\", \"Courier New\", monospace",
+    "mono": "\"VT323\", \"Courier New\", monospace",
+    "sizes": {
+      "base": "20px",
+      "small": "16px",
+      "large": "24px"
+    }
+  },
+  "animations": {
+    "enabled": true,
+    "buttonPress": true
+  },
+  "effects": {
+    "boxShadow": true,
+    "pixelated": true
+  }
+}
+

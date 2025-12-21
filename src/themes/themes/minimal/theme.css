@@ -1,0 +1,207 @@
+/* Minimal Theme - Ultra Clean, Borderless Design */
+
+.theme-minimal {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 15px !important;
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Remove ALL borders and shadows */
+.theme-minimal *,
+.theme-minimal *::before,
+.theme-minimal *::after {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Buttons - minimal underline style */
+.theme-minimal button {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #999999 !important;
+  color: #1a1a1a !important;
+  padding: 12px 0 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  transition: all 0.2s ease !important;
+  text-align: left !important;
+  border-radius: 0 !important;
+}
+
+.theme-minimal button:hover {
+  background: #f5f5f5 !important;
+  border-bottom-color: #1a1a1a !important;
+  border-bottom-width: 2px !important;
+}
+
+.theme-minimal button:active {
+  background: #f0f0f0 !important;
+}
+
+/* Primary buttons */
+.theme-minimal button[class*="primary"],
+.theme-minimal button[class*="accent"] {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 12px 24px !important;
+}
+
+.theme-minimal button[class*="primary"]:hover,
+.theme-minimal button[class*="accent"]:hover {
+  background: #333333 !important;
+}
+
+/* Inputs - minimal underline */
+.theme-minimal input,
+.theme-minimal textarea,
+.theme-minimal select {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #999999 !important;
+  color: #1a1a1a !important;
+  padding: 12px 0 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  border-radius: 0 !important;
+}
+
+.theme-minimal input:focus,
+.theme-minimal textarea:focus,
+.theme-minimal select:focus {
+  outline: none !important;
+  border-bottom-color: #1a1a1a !important;
+  border-bottom-width: 2px !important;
+}
+
+/* Cards - no borders, just spacing */
+.theme-minimal [class*="card"],
+.theme-minimal [class*="container"],
+.theme-minimal [class*="panel"] {
+  background: transparent !important;
+  border: none !important;
+  padding: 24px 0 !important;
+}
+
+/* Remove all borders */
+.theme-minimal [class*="border"] {
+  border: none !important;
+}
+
+/* Sidebar */
+.theme-minimal aside,
+.theme-minimal [class*="sidebar"] {
+  border: none !important;
+  background: #fafafa !important;
+  padding: 24px !important;
+}
+
+/* Modal */
+.theme-minimal [role="dialog"],
+.theme-minimal .modal {
+  border: none !important;
+  background: #ffffff !important;
+  padding: 40px !important;
+}
+
+/* Headings - minimal weight */
+.theme-minimal h1,
+.theme-minimal h2,
+.theme-minimal h3,
+.theme-minimal h4,
+.theme-minimal h5,
+.theme-minimal h6 {
+  font-weight: 400 !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 16px !important;
+}
+
+.theme-minimal h1 {
+  font-size: 32px !important;
+}
+
+.theme-minimal h2 {
+  font-size: 24px !important;
+}
+
+.theme-minimal h3 {
+  font-size: 20px !important;
+}
+
+/* Links - no underline by default */
+.theme-minimal a {
+  color: #1a1a1a !important;
+  text-decoration: none !important;
+  border-bottom: 1px solid transparent !important;
+  transition: border-color 0.2s !important;
+}
+
+.theme-minimal a:hover {
+  border-bottom-color: #1a1a1a !important;
+}
+
+/* Tables - minimal lines */
+.theme-minimal table {
+  border: none !important;
+  border-collapse: collapse !important;
+}
+
+.theme-minimal th,
+.theme-minimal td {
+  border: none !important;
+  border-bottom: 1px solid #f5f5f5 !important;
+  padding: 12px 0 !important;
+  text-align: left !important;
+}
+
+.theme-minimal th {
+  font-weight: 400 !important;
+  color: #666666 !important;
+  border-bottom: 1px solid #1a1a1a !important;
+}
+
+/* Code blocks - minimal background */
+.theme-minimal pre,
+.theme-minimal code {
+  background: #fafafa !important;
+  border: none !important;
+  padding: 12px !important;
+  font-size: 13px !important;
+}
+
+/* Scrollbars - minimal */
+.theme-minimal ::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.theme-minimal ::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 0;
+}
+
+.theme-minimal ::-webkit-scrollbar-thumb:hover {
+  background: #d0d0d0;
+}
+
+/* Generous spacing */
+.theme-minimal * + * {
+  margin-top: 16px;
+}
+
+.theme-minimal [class*="gap"] {
+  gap: 24px !important;
+}
+
+/* Remove all animations */
+.theme-minimal *,
+.theme-minimal *::before,
+.theme-minimal *::after {
+  animation: none !important;
+  transition: opacity 0.2s, background-color 0.2s, border-color 0.2s !important;
+}
+

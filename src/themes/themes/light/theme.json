@@ -1,0 +1,31 @@
+{
+  "id": "light",
+  "name": "Light",
+  "description": "Clean and bright",
+  "category": "standard",
+  "colors": {
+    "bgPrimary": "#ffffff",
+    "bgSecondary": "#f9fafb",
+    "bgTertiary": "#f3f4f6",
+    "textPrimary": "#111827",
+    "textSecondary": "#6b7280",
+    "textTertiary": "#9ca3af",
+    "borderPrimary": "#e5e7eb",
+    "borderSecondary": "#d1d5db",
+    "accent": "#4f46e5",
+    "accentHover": "#4338ca",
+    "accentText": "#ffffff",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#3b82f6",
+    "hover": "#f3f4f6",
+    "active": "#e5e7eb",
+    "codeBg": "#f3f4f6",
+    "codeText": "#111827",
+    "blockquoteBorder": "#d1d5db",
+    "tableHeaderBg": "#f9fafb"
+  },
+  "monacoTheme": "vs"
+}
+

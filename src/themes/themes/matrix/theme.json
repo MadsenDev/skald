@@ -1,0 +1,49 @@
+{
+  "id": "matrix",
+  "name": "Matrix",
+  "description": "Digital rain effect - complete terminal transformation",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#000000",
+    "bgSecondary": "#0a0a0a",
+    "bgTertiary": "#141414",
+    "textPrimary": "#00ff41",
+    "textSecondary": "#00cc33",
+    "textTertiary": "#009922",
+    "borderPrimary": "#1a1a1a",
+    "borderSecondary": "#2a2a2a",
+    "accent": "#00ff41",
+    "accentHover": "#33ff66",
+    "accentText": "#000000",
+    "success": "#00ff41",
+    "warning": "#ffff00",
+    "error": "#ff0044",
+    "info": "#00ffff",
+    "hover": "#0a0a0a",
+    "active": "#141414",
+    "codeBg": "#0a0a0a",
+    "codeText": "#00ff41",
+    "blockquoteBorder": "#00ff41",
+    "tableHeaderBg": "#0a0a0a"
+  },
+  "monacoTheme": "vs-dark",
+  "fonts": {
+    "primary": "\"Courier New\", monospace",
+    "mono": "\"Courier New\", monospace",
+    "sizes": {
+      "base": "14px",
+      "small": "12px",
+      "large": "16px"
+    }
+  },
+  "animations": {
+    "enabled": true,
+    "matrixRain": true
+  },
+  "effects": {
+    "textGlow": true,
+    "borderGlow": true,
+    "scanlines": true
+  }
+}
+

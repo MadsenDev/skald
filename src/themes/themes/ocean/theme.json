@@ -1,0 +1,48 @@
+{
+  "id": "ocean",
+  "name": "Ocean",
+  "description": "Calm waves and deep blue",
+  "category": "drastic",
+  "colors": {
+    "bgPrimary": "#001122",
+    "bgSecondary": "#002244",
+    "bgTertiary": "#003366",
+    "textPrimary": "#00bcd4",
+    "textSecondary": "#0097a7",
+    "textTertiary": "#00838f",
+    "borderPrimary": "#004466",
+    "borderSecondary": "#005577",
+    "accent": "#00bcd4",
+    "accentHover": "#00e5ff",
+    "accentText": "#ffffff",
+    "success": "#00ff41",
+    "warning": "#ffaa00",
+    "error": "#ff0044",
+    "info": "#00bcd4",
+    "hover": "#002244",
+    "active": "#003366",
+    "codeBg": "#002244",
+    "codeText": "#00bcd4",
+    "blockquoteBorder": "#00bcd4",
+    "tableHeaderBg": "#002244"
+  },
+  "monacoTheme": "vs-dark",
+  "fonts": {
+    "primary": "system-ui, sans-serif",
+    "mono": "\"Courier New\", monospace",
+    "sizes": {
+      "base": "14px",
+      "small": "12px",
+      "large": "16px"
+    }
+  },
+  "animations": {
+    "enabled": true,
+    "waves": true
+  },
+  "effects": {
+    "ripple": true,
+    "flow": true
+  }
+}
+
