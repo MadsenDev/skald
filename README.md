@@ -1,40 +1,24 @@
 # Skald
 
-Skald is an Electron desktop knowledge-base app aimed at a multiplayer, schema-aware, local-first note workflow.
+Skald is an Electron desktop knowledge-base app aimed at a local-first, schema-aware note workflow with room for future collaboration features.
 
-The deeper product direction in this repo calls the concept "ForgeNote": an Obsidian-style vault with stronger structured data, task extraction, search, and eventually safer collaboration and plugin boundaries.
+The product direction in the planning docs often uses the name `ForgeNote`: an Obsidian-like vault with stronger structured data, task extraction, search, and eventually safer collaboration and plugin boundaries. The repository name remains `skald`.
 
-## Current Scope
+## Current scope
 
 The app already contains working foundations for:
 
 - vault selection and vault loading
 - note list and note editor flows
+- markdown editing and preview tooling
 - task views in table, kanban, and calendar form
-- quick switcher / command-palette style search
+- quick switcher and search flows
 - daily notes dashboard
 - quick capture flows
-- theme loading and theme-aware UI
+- theme loading, theme studio, and animated backgrounds
 - Electron shell with preload bridge
 
-Planned direction and feature tracking live in [PROJECT.md](./PROJECT.md) and [FEATURES.md](./FEATURES.md).
-
-## Development
-
-```bash
-npm install
-npm run electron:dev
-```
-
-Build commands:
-
-```bash
-npm run build
-npm run typecheck
-npm run electron:pack
-```
-
-## Stack
+## Tech stack
 
 - Electron
 - React
@@ -46,7 +30,37 @@ npm run electron:pack
 - Zustand
 - Tailwind CSS
 
+## Development
+
+```bash
+npm install
+npm run electron:dev
+```
+
+Useful commands:
+
+```bash
+npm run build
+npm run typecheck
+npm run electron:pack
+```
+
+## Project structure
+
+- `src/App.tsx`: application shell
+- `src/components/`: vault, notes, editor, tasks, quick capture, search, and theme UI
+- `src/store/`: vault, task, schema, search, settings, and pinned-preview state
+- `src/themes/`: theme system, loading, and application
+- `src/utils/`: wikilinks, frontmatter, schema parsing, task formatting, and editor helpers
+
+## Planning docs
+
+Read these before making major product or architecture changes:
+
+- `PROJECT.md`
+- `FEATURES.md`
+
 ## Notes
 
-- The repository name is `skald`, but the product vision in the planning docs is currently framed as "ForgeNote".
-- This project is more advanced than the old placeholder README suggested; use the planning docs before making major product changes.
+- The README describes the implemented foundations, not a promise that collaboration features are complete.
+- Use the planning docs to distinguish current behavior from longer-term product direction.

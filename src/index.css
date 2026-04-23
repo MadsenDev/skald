@@ -320,333 +320,305 @@
   z-index: 1;
 }
 
-/* Theme CSS Variables - will be set dynamically */
 :root {
-  --theme-bg-primary: #ffffff;
-  --theme-bg-secondary: #f9fafb;
-  --theme-bg-tertiary: #f3f4f6;
-  --theme-text-primary: #111827;
-  --theme-text-secondary: #6b7280;
-  --theme-text-tertiary: #9ca3af;
-  --theme-border-primary: #e5e7eb;
-  --theme-border-secondary: #d1d5db;
-  --theme-accent: #4f46e5;
-  --theme-accent-hover: #4338ca;
-  --theme-accent-text: #ffffff;
-  --theme-success: #10b981;
-  --theme-warning: #f59e0b;
-  --theme-error: #ef4444;
-  --theme-info: #3b82f6;
-  --theme-hover: #f3f4f6;
-  --theme-active: #e5e7eb;
-  --theme-code-bg: #f3f4f6;
-  --theme-code-text: #111827;
-  --theme-blockquote-border: #d1d5db;
-  --theme-table-header-bg: #f9fafb;
+  --theme-font-primary: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --theme-font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --theme-font-size-base: 15px;
+  --theme-density-scale: 1;
+  --theme-radius-small: 8px;
+  --theme-radius-medium: 14px;
+  --theme-radius-large: 20px;
+  --theme-radius-xl: 28px;
+  --theme-bg-canvas: #F4EFE6;
+  --theme-bg-shell: #FBF7F2;
+  --theme-bg-panel: #FFFDFC;
+  --theme-bg-elevated: #FFFFFF;
+  --theme-bg-sunken: #ECE3D5;
+  --theme-bg-overlay: #FFF8F0F2;
+  --theme-bg-primary: var(--theme-bg-shell);
+  --theme-bg-secondary: var(--theme-bg-panel);
+  --theme-bg-tertiary: var(--theme-bg-sunken);
+  --theme-text-primary: #2E261E;
+  --theme-text-secondary: #5C5248;
+  --theme-text-tertiary: #8A7C6C;
+  --theme-text-inverse: #FFF8F0;
+  --theme-border-subtle: #E7DDD0;
+  --theme-border-primary: #D8CAB8;
+  --theme-border-secondary: #B7A48F;
+  --theme-accent: #A04E2D;
+  --theme-accent-hover: #8C4224;
+  --theme-accent-active: #71341A;
+  --theme-accent-text: #FFF7F2;
+  --theme-accent-soft: #F3DDCF;
+  --theme-success: #2F7D61;
+  --theme-warning: #B36A18;
+  --theme-error: #B54545;
+  --theme-info: #3C6E99;
+  --theme-overlay-scrim: #2A1C1040;
+  --theme-overlay-glass: #FFF9F0D9;
+  --theme-overlay-border: #E7D8C5;
+  --theme-overlay-blur: 18px;
+  --theme-shadow-small: 0 8px 24px rgba(29, 36, 43, 0.07);
+  --theme-shadow-medium: 0 18px 48px rgba(29, 36, 43, 0.12);
+  --theme-shadow-large: 0 28px 80px rgba(29, 36, 43, 0.14);
+  --theme-editor-bg: #FFFDFC;
+  --theme-editor-gutter: #ECE3D5;
+  --theme-editor-selection: #A04E2D33;
+  --theme-editor-cursor: #A04E2D;
+  --theme-editor-line-highlight: #F7EFE4;
+  --theme-code-bg: #F5EEE4;
+  --theme-code-text: #2E261E;
+  --theme-blockquote-border: var(--theme-border-secondary);
+  --theme-table-header-bg: var(--theme-bg-sunken);
+  --theme-hover: rgba(46, 38, 30, 0.045);
+  --theme-active: rgba(46, 38, 30, 0.08);
+  --theme-motion-scale: 1;
+  --theme-glow-intensity: 0;
+  --theme-noise-opacity: 0.03;
+  --theme-vignette-opacity: 0.08;
+  --theme-gradient-1: linear-gradient(135deg, #F4EFE6 0%, #F8F1E8 45%, #EDE2D3 100%);
+  --theme-gradient-2: none;
+  --theme-gradient-3: none;
 }
 
-/* Override Tailwind's default colors with theme variables */
-/* Apply to root and all children when data-theme is set */
-[data-theme],
-[data-theme] * {
-  /* Background colors */
-  --tw-bg-opacity: 1;
-}
-
-/* Override Tailwind divide utilities */
-[data-theme] .divide-y,
-[data-theme] .divide-gray-200,
-[data-theme] .divide-gray-300 {
-  border-color: var(--theme-border-primary) !important;
-}
-
-[data-theme] .bg-white,
-[data-theme] .bg-gray-50,
-[data-theme] .bg-gray-50 {
-  background-color: var(--theme-bg-primary) !important;
-}
-
-[data-theme] .bg-gray-100 {
-  background-color: var(--theme-bg-secondary) !important;
-}
-
-[data-theme] .bg-gray-200 {
-  background-color: var(--theme-border-primary) !important;
-}
-
-/* Text colors - comprehensive overrides */
-[data-theme] .text-gray-900,
-[data-theme] .text-gray-800,
-[data-theme] h1,
-[data-theme] h2,
-[data-theme] h3,
-[data-theme] h4,
-[data-theme] h5,
-[data-theme] h6 {
-  color: var(--theme-text-primary) !important;
-}
-
-[data-theme] .text-gray-700,
-[data-theme] .text-gray-600 {
-  color: var(--theme-text-secondary) !important;
-}
-
-[data-theme] .text-gray-500,
-[data-theme] .text-gray-400,
-[data-theme] .text-gray-300 {
-  color: var(--theme-text-tertiary) !important;
-}
-
-/* Exclude theme preview cards from ALL text color overrides - must come after general rules */
-/* Use unset to remove color property and allow inline styles to work */
-[data-theme] .theme-preview-card,
-[data-theme] .theme-preview-card *,
-[data-theme] .theme-preview-card span,
-[data-theme] .theme-preview-card p,
-[data-theme] .theme-preview-card div,
-[data-theme] .theme-preview-card .text-gray-900,
-[data-theme] .theme-preview-card .text-gray-800,
-[data-theme] .theme-preview-card .text-gray-700,
-[data-theme] .theme-preview-card .text-gray-600,
-[data-theme] .theme-preview-card .text-gray-500,
-[data-theme] .theme-preview-card .text-gray-400,
-[data-theme] .theme-preview-card .text-gray-300,
-[data-theme] .theme-preview-card h1,
-[data-theme] .theme-preview-card h2,
-[data-theme] .theme-preview-card h3,
-[data-theme] .theme-preview-card h4,
-[data-theme] .theme-preview-card h5,
-[data-theme] .theme-preview-card h6,
-[data-theme] .theme-preview-card .font-semibold,
-[data-theme] .theme-preview-card .font-medium,
-[data-theme] .theme-preview-card .font-bold {
-  color: unset !important;
-}
-
-/* White text - use accent text color for better contrast */
-[data-theme] .text-white {
-  color: var(--theme-accent-text) !important;
-}
-
-/* Form elements - comprehensive input styling */
-[data-theme] input,
-[data-theme] input[type="text"],
-[data-theme] input[type="number"],
-[data-theme] input[type="date"],
-[data-theme] input[type="email"],
-[data-theme] input[type="password"],
-[data-theme] input[type="search"],
-[data-theme] input[type="time"],
-[data-theme] input[type="url"],
-[data-theme] textarea,
-[data-theme] select {
-  background-color: var(--theme-bg-primary) !important;
-  color: var(--theme-text-primary) !important;
-  border-color: var(--theme-border-primary) !important;
-}
-
-/* Override Tailwind's bg-white on inputs */
-[data-theme] input.bg-white,
-[data-theme] textarea.bg-white,
-[data-theme] select.bg-white {
-  background-color: var(--theme-bg-primary) !important;
-}
-
-/* Ensure inputs with Tailwind classes still get theme colors */
-[data-theme] input.border-gray-300,
-[data-theme] textarea.border-gray-300,
-[data-theme] select.border-gray-300 {
-  border-color: var(--theme-border-primary) !important;
-}
-
-[data-theme] input.text-gray-900,
-[data-theme] input.text-gray-700,
-[data-theme] input.text-gray-600,
-[data-theme] textarea.text-gray-900,
-[data-theme] textarea.text-gray-700,
-[data-theme] textarea.text-gray-600,
-[data-theme] select.text-gray-900,
-[data-theme] select.text-gray-700,
-[data-theme] select.text-gray-600 {
-  color: var(--theme-text-primary) !important;
-}
-
-[data-theme] input::placeholder,
-[data-theme] textarea::placeholder {
-  color: var(--theme-text-tertiary) !important;
-  opacity: 0.7;
-}
-
-[data-theme] select option {
-  background-color: var(--theme-bg-primary) !important;
-  color: var(--theme-text-primary) !important;
-}
-
-/* Border colors */
-[data-theme] .border-gray-200,
-[data-theme] .border-gray-300,
-[data-theme] .border,
-[data-theme] .border-r,
-[data-theme] .border-b,
-[data-theme] .border-t {
-  border-color: var(--theme-border-primary) !important;
-}
-
-/* Hover states */
-[data-theme] .hover\:bg-gray-50:hover,
-[data-theme] .hover\:bg-gray-100:hover {
-  background-color: var(--theme-hover) !important;
-}
-
-[data-theme] .hover\:bg-gray-200:hover {
-  background-color: var(--theme-active) !important;
-}
-
-[data-theme] .hover\:text-gray-700:hover,
-[data-theme] .hover\:text-gray-600:hover {
-  color: var(--theme-text-secondary) !important;
-}
-
-/* Fix hover states: when buttons with white text get hover backgrounds, ensure text is readable */
-/* This handles the case where white text becomes invisible on light hover backgrounds in dark themes */
-[data-theme] button[class*="text-white"][class*="hover:bg-gray"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]) {
-  color: var(--theme-text-primary) !important;
-}
-
-/* Also handle buttons where text-white might be applied via theme overrides */
-[data-theme] button.text-white[class*="hover:bg-gray-50"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]),
-[data-theme] button.text-white[class*="hover:bg-gray-100"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]),
-[data-theme] button.text-white[class*="hover:bg-gray-200"]:hover:not([class*="bg-indigo-600"]):not([class*="bg-indigo-700"]) {
-  color: var(--theme-text-primary) !important;
-}
-
-/* Preserve explicit hover text colors when set */
-[data-theme] button[class*="hover:text-gray-700"]:hover,
-[data-theme] button[class*="hover:text-gray-600"]:hover,
-[data-theme] button[class*="hover:text-gray-500"]:hover {
-  color: var(--theme-text-secondary) !important;
-}
-
-/* Accent colors */
-[data-theme] .bg-indigo-600 {
-  background-color: var(--theme-accent) !important;
-}
-
-/* Selected button background - visible tint of accent color */
-[data-theme] .bg-indigo-50 {
-  /* Fallback for browsers that don't support color-mix */
-  background-color: var(--theme-bg-secondary) !important;
-  /* Use color-mix if supported for a subtle accent tint */
-  background-color: color-mix(in srgb, var(--theme-accent) 25%, var(--theme-bg-primary)) !important;
-}
-
-[data-theme] .bg-indigo-100 {
-  background-color: color-mix(in srgb, var(--theme-accent) 25%, var(--theme-bg-primary)) !important;
-}
-
-[data-theme] .text-indigo-600,
-[data-theme] .text-indigo-700,
-[data-theme] .text-indigo-800 {
-  color: var(--theme-accent) !important;
-}
-
-/* Selected button state - text should use accent color */
-[data-theme] .bg-indigo-50.text-indigo-600 {
-  color: var(--theme-accent) !important;
-}
-
-/* Icons in selected buttons - ensure they use accent color for visibility */
-[data-theme] .bg-indigo-50 svg,
-[data-theme] button.bg-indigo-50 svg {
-  color: var(--theme-accent) !important;
-  fill: var(--theme-accent) !important;
-}
-
-[data-theme] .hover\:bg-indigo-700:hover {
-  background-color: var(--theme-accent-hover) !important;
-}
-
-/* Settings modal specific overrides */
-[data-theme] .bg-white {
-  background-color: var(--theme-bg-primary) !important;
-}
-
-/* Ensure all text in modals is readable */
-[data-theme] .modal,
-[data-theme] [role="dialog"],
-[data-theme] .fixed {
-  color: var(--theme-text-primary) !important;
-}
-
-/* Labels and form text */
-[data-theme] label {
-  color: var(--theme-text-secondary) !important;
-}
-
-[data-theme] .font-medium,
-[data-theme] .font-semibold,
-[data-theme] .font-bold {
-  color: var(--theme-text-primary) !important;
-}
-
-/* Sidebar and navigation */
-[data-theme] aside,
-[data-theme] nav {
-  background-color: var(--theme-bg-primary) !important;
-  color: var(--theme-text-primary) !important;
-}
-
-[data-theme] .bg-gray-50 {
-  background-color: var(--theme-bg-secondary) !important;
-}
-
-/* Buttons with text-white should use readable color */
-[data-theme] button.text-white,
-[data-theme] .text-white {
-  color: var(--theme-accent-text) !important;
-}
-
-/* Vault selector primary button - always white text on accent background */
-[data-theme] .vault-select-button {
-  color: #ffffff !important;
-}
-
-/* Ensure selected/active states are readable */
-[data-theme] .bg-indigo-600.text-white,
-[data-theme] .bg-indigo-600 .text-white {
-  color: var(--theme-accent-text) !important;
-}
-
-/* Icons should inherit text color, but ensure visibility in selected buttons */
-[data-theme] svg {
-  color: inherit;
-  fill: currentColor;
-}
-
-[data-theme] .text-indigo-600 svg,
-[data-theme] button.text-indigo-600 svg,
-[data-theme] .bg-indigo-50 svg,
-[data-theme] button.bg-indigo-50 svg {
-  color: var(--theme-accent) !important;
-  fill: currentColor !important;
+html,
+body {
+  background-color: var(--theme-bg-canvas);
+  color: var(--theme-text-primary);
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-font-size-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--theme-bg-primary);
-  color: var(--theme-text-primary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color calc(160ms * max(var(--theme-motion-scale), 0.2)) ease,
+    color calc(160ms * max(var(--theme-motion-scale), 0.2)) ease;
 }
 
 #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-secondary) var(--theme-bg-secondary);
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  background-color: var(--theme-bg-elevated);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--theme-text-tertiary);
+}
+
+.bg-app-shell {
+  background-color: var(--theme-bg-shell);
+}
+
+.bg-app-panel {
+  background-color: var(--theme-bg-panel);
+}
+
+.bg-app-elevated {
+  background-color: var(--theme-bg-elevated);
+}
+
+.bg-app-sunken {
+  background-color: var(--theme-bg-sunken);
+}
+
+.text-primary {
+  color: var(--theme-text-primary);
+}
+
+.text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.text-muted {
+  color: var(--theme-text-tertiary);
+}
+
+.border-app-default {
+  border-color: var(--theme-border-primary);
+}
+
+.border-app-strong {
+  border-color: var(--theme-border-secondary);
+}
+
+.hover-surface:hover {
+  background-color: var(--theme-hover);
+}
+
+.theme-overlay {
+  background-color: var(--theme-overlay-scrim);
+  backdrop-filter: blur(var(--theme-overlay-blur));
+}
+
+.theme-glass-panel {
+  background-color: var(--theme-overlay-glass);
+  border: 1px solid var(--theme-overlay-border);
+  backdrop-filter: blur(var(--theme-overlay-blur));
+  box-shadow: var(--theme-shadow-medium);
+}
+
+/* Compatibility layer for still-unmigrated Tailwind color utilities */
+.bg-white,
+.bg-gray-50 {
+  background-color: var(--theme-bg-elevated) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--theme-bg-sunken) !important;
+}
+
+.bg-gray-200 {
+  background-color: var(--theme-border-primary) !important;
+}
+
+.text-gray-900,
+.text-gray-800,
+.text-gray-700 {
+  color: var(--theme-text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500,
+.text-gray-400 {
+  color: var(--theme-text-secondary) !important;
+}
+
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--theme-border-primary) !important;
+}
+
+.bg-indigo-50,
+.bg-indigo-100 {
+  background-color: var(--theme-accent-soft) !important;
+}
+
+.bg-indigo-600 {
+  background-color: var(--theme-accent) !important;
+}
+
+.text-indigo-600,
+.text-indigo-700,
+.text-indigo-800 {
+  color: var(--theme-accent) !important;
+}
+
+.text-white {
+  color: var(--theme-accent-text) !important;
+}
+
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-gray-200:hover {
+  background-color: var(--theme-hover) !important;
+}
+
+.hover\:bg-indigo-700:hover {
+  background-color: var(--theme-accent-hover) !important;
+}
+
+.theme-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.theme-background__base,
+.theme-background__noise,
+.theme-background__vignette {
+  position: absolute;
+  inset: 0;
+}
+
+.theme-background__base {
+  background-color: var(--theme-bg-canvas);
+  background-image: var(--theme-gradient-1), var(--theme-gradient-2), var(--theme-gradient-3);
+  background-size: cover;
+}
+
+.theme-background__noise {
+  opacity: var(--theme-noise-opacity);
+  background-image:
+    radial-gradient(circle at 20% 20%, currentColor 0.5px, transparent 0.5px),
+    radial-gradient(circle at 80% 30%, currentColor 0.5px, transparent 0.5px),
+    radial-gradient(circle at 55% 80%, currentColor 0.5px, transparent 0.5px);
+  background-size: 160px 160px;
+  color: var(--theme-text-primary);
+}
+
+.theme-background__vignette {
+  background: radial-gradient(circle at center, transparent 48%, rgba(0, 0, 0, var(--theme-vignette-opacity)) 100%);
+}
+
+[data-theme-atmosphere="grid"] .theme-background__base::after,
+[data-theme-atmosphere="waves"] .theme-background__base::after,
+[data-theme-atmosphere="glow"] .theme-background__base::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+[data-theme-atmosphere="grid"] .theme-background__base::after {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: calc(var(--theme-glow-intensity) + 0.12);
+}
+
+[data-theme-atmosphere="waves"] .theme-background__base::after {
+  background:
+    radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--theme-accent) 16%, transparent) 0%, transparent 36%),
+    radial-gradient(circle at 80% 75%, color-mix(in srgb, var(--theme-info) 16%, transparent) 0%, transparent 40%);
+  animation: ocean-wave calc(30s * max(var(--theme-motion-scale), 0.2)) ease infinite;
+}
+
+[data-theme-atmosphere="glow"] .theme-background__base::after {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--theme-accent) calc(var(--theme-glow-intensity) * 45%), transparent) 0%, transparent 35%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--theme-info) calc(var(--theme-glow-intensity) * 35%), transparent) 0%, transparent 38%);
+}
+
+[data-theme-mode="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme-mode="light"] {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Custom titlebar - only the titlebar should be draggable */
@@ -781,4 +753,3 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--theme-border-secondary) var(--theme-bg-secondary);
 }
-

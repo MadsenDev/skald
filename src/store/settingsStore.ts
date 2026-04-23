@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { ThemeDefinition } from '../themes/themeSystem';
 
 export interface AppSettings {
   editor?: {
@@ -10,7 +11,11 @@ export interface AppSettings {
     autoLinkSuggestions?: boolean; // Automatic link suggestions while typing
   };
   appearance?: {
-    theme?: string; // Theme ID (e.g., 'light', 'dark', 'blue', etc.)
+    theme?: string; // Legacy theme field kept for migration
+    activeThemeId?: string;
+    reducedMotion?: boolean;
+    customThemes?: ThemeDefinition[];
+    themeStudioDraft?: ThemeDefinition | null;
     sidebarNoteDisplay?: 'filename' | 'title'; // How to display notes in sidebar
   };
   kanban?: {
@@ -108,4 +113,3 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     return value as T;
   },
 }));
-

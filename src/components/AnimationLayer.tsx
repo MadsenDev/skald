@@ -1,9 +1,8 @@
-import { useSettingsStore } from '../store/settingsStore';
+import { useActiveTheme } from '../themes/useTheme';
 import { MatrixRain } from './MatrixRain';
 import { FireAnimation } from './FireAnimation';
 import { OceanAnimation } from './OceanAnimation';
 import { NeonAnimation } from './NeonAnimation';
-import { GlitchAnimation } from './GlitchAnimation';
 
 /**
  * AnimationLayer - A non-interactive overlay for theme animations
@@ -13,9 +12,11 @@ import { GlitchAnimation } from './GlitchAnimation';
  * .animation-layer-matrix { ... }
  * .animation-layer-retro { ... }
  */
-export function AnimationLayer() {
-  const settings = useSettingsStore((state) => state.settings);
-  const themeId = settings.appearance?.theme ?? 'light';
+export function AnimationLayer({ disabled = false }: { disabled?: boolean }) {
+  const { definition, resolved } = useActiveTheme();
+  const themeId = definition.id;
+  const atmosphere = definition.effects.atmosphere;
+  const motionDisabled = disabled || resolved.vars['--theme-motion-scale'] === '0';
 
   return (
     <div
@@ -30,13 +31,13 @@ export function AnimationLayer() {
         zIndex: 1, // Behind app content but above background
         overflow: 'hidden',
         overscrollBehavior: 'none',
-        willChange: 'transform, opacity', // Optimize for animations
+        willChange: 'transform, opacity',
       }}
     >
-      {themeId === 'matrix' && <MatrixRain />}
-      {themeId === 'fire' && <FireAnimation />}
-      {themeId === 'ocean' && <OceanAnimation />}
-      {themeId === 'neon' && <NeonAnimation />}
+      {!motionDisabled && atmosphere === 'grid' && <MatrixRain />}
+      {!motionDisabled && atmosphere === 'glow' && themeId === 'ember-dusk' && <FireAnimation />}
+      {!motionDisabled && atmosphere === 'waves' && <OceanAnimation />}
+      {!motionDisabled && atmosphere === 'glow' && themeId === 'graphite-night' && <NeonAnimation />}
     </div>
   );
 }

@@ -49,6 +49,7 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
   }, [onClose]);
 
   const save = async () => {
+    if (!task) return;
     const newContent = buildTaskContent(local.content, {
       dueDate: local.dueDate ? new Date(local.dueDate).getTime() : undefined,
       priority: local.priority || 0,
@@ -68,6 +69,7 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
   };
 
   const remove = async () => {
+    if (!task) return;
     if (!confirm('Delete this task?')) return;
     await deleteTask(task.id);
     await loadTasks();
@@ -79,45 +81,46 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
       {task && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 theme-overlay z-40"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
           <motion.div
-            className="fixed inset-y-0 right-0 w-[420px] bg-white shadow-xl z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 w-[420px] bg-app-elevated z-50 flex flex-col"
+            style={{ boxShadow: 'var(--theme-shadow-large)', borderLeft: '1px solid var(--theme-border-primary)' }}
             initial={{ x: 440, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 440, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           >
-            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-app-default flex items-center justify-between bg-app-panel">
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Edit Task</h3>
-                {noteTitle && <p className="text-xs text-gray-500">in {noteTitle}</p>}
+                <h3 className="text-base font-semibold text-primary">Edit Task</h3>
+                {noteTitle && <p className="text-xs text-muted">in {noteTitle}</p>}
               </div>
-              <button onClick={onClose} className="p-2 rounded hover:bg-gray-100">
+              <button onClick={onClose} className="p-2 rounded hover-surface text-secondary">
                 <FiX />
               </button>
             </div>
             <div className="p-4 space-y-4 overflow-y-auto">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <label className="block text-sm font-medium text-secondary mb-1">Title</label>
                 <input
                   value={local.content}
                   onChange={(e) => setLocal({ ...local, content: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2"
                   placeholder="Describe the task"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-secondary mb-1">Status</label>
                   <select
                     value={local.status}
                     onChange={(e) => setLocal({ ...local, status: e.target.value as Task['status'] })}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full border rounded px-3 py-2"
                   >
                     <option value="open">Open</option>
                     <option value="in-progress">In Progress</option>
@@ -126,11 +129,11 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-secondary mb-1">Priority</label>
                   <select
                     value={local.priority}
                     onChange={(e) => setLocal({ ...local, priority: parseInt(e.target.value, 10) })}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full border rounded px-3 py-2"
                   >
                     <option value={0}>None</option>
                     <option value={1}>Low</option>
@@ -141,46 +144,47 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-secondary mb-1">Due Date</label>
                   <input
                     type="date"
                     value={local.dueDate}
                     onChange={(e) => setLocal({ ...local, dueDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full border rounded px-3 py-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+                  <label className="block text-sm font-medium text-secondary mb-1">Assignee</label>
                   <input
                     placeholder="username"
                     value={local.assignedTo}
                     onChange={(e) => setLocal({ ...local, assignedTo: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full border rounded px-3 py-2"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Labels</label>
+                <label className="block text-sm font-medium text-secondary mb-1">Labels</label>
                 <input
                   placeholder="comma separated"
                   value={local.labels}
                   onChange={(e) => setLocal({ ...local, labels: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2"
                 />
               </div>
             </div>
-            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-4 py-3 border-t border-app-default flex items-center justify-between bg-app-panel">
               <button
                 onClick={remove}
-                className="inline-flex items-center gap-1 text-red-600 hover:bg-red-50 px-3 py-2 rounded"
+                className="inline-flex items-center gap-1 px-3 py-2 rounded"
+                style={{ color: 'var(--theme-error)' }}
               >
                 <FiTrash2 /> Delete
               </button>
               <div className="flex gap-2">
-                <button onClick={onClose} className="px-3 py-2 rounded border border-gray-300 text-gray-700">
+                <button onClick={onClose} className="px-3 py-2 rounded border text-secondary" style={{ borderColor: 'var(--theme-border-primary)' }}>
                   Cancel
                 </button>
-                <button onClick={save} className="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">
+                <button onClick={save} className="px-3 py-2 rounded" style={{ backgroundColor: 'var(--theme-accent)', color: 'var(--theme-accent-text)' }}>
                   Save
                 </button>
               </div>
@@ -191,5 +195,3 @@ export function TaskDrawer({ task, noteTitle, onClose }: TaskDrawerProps) {
     </AnimatePresence>
   );
 }
-
-

@@ -15,13 +15,13 @@ import { QuickCapture } from './components/QuickCapture';
 import { TaskFilters } from './components/TaskFilters';
 import { TitleBar } from './components/TitleBar';
 import { AnimationLayer } from './components/AnimationLayer';
-import { GlitchAnimation } from './components/GlitchAnimation';
 import { useVaultStore } from './store/vaultStore';
 import { useSettingsStore } from './store/settingsStore';
 import { FiFileText, FiCheckSquare } from 'react-icons/fi';
 import { SettingsModal } from './components/SettingsModal';
-import { getDefaultTheme } from './themes/themes';
-import { applyThemeFromFile } from './themes/themeLoader';
+import { ThemeBackground } from './components/ThemeBackground';
+import { applyActiveThemeFromSettings } from './themes/useTheme';
+import { getDefaultThemeDefinition } from './themes/themeSystem';
 
 type View = 'notes' | 'tasks' | 'tasks-kanban' | 'tasks-calendar';
 
@@ -40,21 +40,12 @@ function App() {
   // Load settings on mount and apply theme
   useEffect(() => {
     const initializeTheme = async () => {
-      // Apply default theme immediately to avoid flash
-      const defaultTheme = getDefaultTheme();
-      await applyThemeFromFile(defaultTheme.id);
-      
-      // Load settings
+      applyActiveThemeFromSettings({
+        appearance: { activeThemeId: getDefaultThemeDefinition().id },
+      });
       await loadSettings();
-      
-      // Get settings from store after loading
       const loadedSettings = useSettingsStore.getState().settings;
-      const savedThemeId = loadedSettings.appearance?.theme;
-      if (savedThemeId) {
-        await applyThemeFromFile(savedThemeId);
-      }
-      
-      // Mark initialization as complete
+      applyActiveThemeFromSettings(loadedSettings);
       setIsInitializing(false);
     };
     
@@ -62,14 +53,9 @@ function App() {
   }, []); // Only run on mount
 
   // Apply theme when settings change (for reactive updates)
-  const themeId = settings.appearance?.theme ?? 'light';
   useEffect(() => {
-    applyThemeFromFile(themeId).catch(err => {
-      console.error('Failed to apply theme:', err);
-      // Fallback to default
-      applyThemeFromFile(getDefaultTheme().id);
-    });
-  }, [themeId]);
+    applyActiveThemeFromSettings(settings);
+  }, [settings]);
 
   useEffect(() => {
     if (vaultPath) {
@@ -150,12 +136,13 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50" style={{ position: 'relative', zIndex: 10 }}>
-      <AnimationLayer />
-      {settings.appearance?.theme === 'glitch' && <GlitchAnimation />}
+    <div className="flex flex-col h-screen bg-app-shell" style={{ position: 'relative', zIndex: 10 }}>
+      <ThemeBackground />
+      <AnimationLayer disabled={Boolean(selectedNote || peekedNote)} />
+      <div className="relative z-10 flex flex-col h-full">
       <TitleBar onSettingsClick={() => setIsSettingsOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 flex flex-col" style={{ backgroundColor: 'var(--theme-bg-primary)', borderRight: '1px solid var(--theme-border-primary)' }}>
+        <aside className="w-64 flex flex-col bg-app-panel border-app-default">
         <div className="flex" style={{ borderBottom: '1px solid var(--theme-border-primary)' }}>
           <button
             onClick={() => setCurrentView('notes')}
@@ -197,7 +184,7 @@ function App() {
           )
         ) : (
           <div className="flex-1 flex flex-col">
-            <div className="border-b border-gray-200 px-4 py-2 bg-white flex flex-wrap items-center justify-between gap-3">
+            <div className="border-b border-app-default px-4 py-2 bg-app-elevated flex flex-wrap items-center justify-between gap-3">
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentView('tasks')}
@@ -236,6 +223,7 @@ function App() {
         )}
       </main>
       </div>
+      </div>
       {/* Peek Panel */}
       <AnimatePresence>
         {peekedNote && (
@@ -244,15 +232,15 @@ function App() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-1/2 bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 w-1/2 bg-app-elevated border-l border-app-default shadow-2xl z-50 flex flex-col"
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-800">
+            <div className="flex items-center justify-between p-4 border-b border-app-default bg-app-panel">
+              <h2 className="text-lg font-semibold text-primary">
                 {notes.find(n => n.path === peekedNote)?.title || 'Peek'}
               </h2>
               <button
                 onClick={() => setPeekedNote(null)}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-secondary hover-surface rounded-lg transition-colors"
               >
                 Close
               </button>
@@ -280,4 +268,3 @@ function App() {
 }
 
 export default App;
-

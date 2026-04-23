@@ -38,20 +38,20 @@ export function CreateFolderDialog({ isOpen, onClose, onCreate }: CreateFolderDi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+    <div className="fixed inset-0 theme-overlay flex items-center justify-center z-50">
+      <div className="theme-glass-panel rounded-2xl p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Create New Folder</h2>
+          <h2 className="text-xl font-semibold text-primary">Create New Folder</h2>
           <button
             onClick={handleCancel}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted hover:text-primary transition-colors"
           >
             <FiX className="w-5 h-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="folder-name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="folder-name" className="block text-sm font-medium text-secondary mb-2">
               Folder Name
             </label>
             <input
@@ -61,8 +61,8 @@ export function CreateFolderDialog({ isOpen, onClose, onCreate }: CreateFolderDi
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter folder name..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900"
-              style={{ backgroundColor: 'white', color: '#111827' }}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+              style={{ backgroundColor: 'var(--theme-bg-elevated)', color: 'var(--theme-text-primary)', borderColor: 'var(--theme-border-primary)' }}
               autoFocus
             />
           </div>
@@ -70,14 +70,15 @@ export function CreateFolderDialog({ isOpen, onClose, onCreate }: CreateFolderDi
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-secondary bg-app-sunken rounded-lg hover-surface transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: 'var(--theme-accent)', color: 'var(--theme-accent-text)' }}
             >
               Create
             </button>
@@ -87,4 +88,3 @@ export function CreateFolderDialog({ isOpen, onClose, onCreate }: CreateFolderDi
     </div>
   );
 }
-

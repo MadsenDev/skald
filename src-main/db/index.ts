@@ -32,7 +32,11 @@ export interface Settings {
     minimap?: boolean;
   };
   appearance?: {
-    theme?: 'light' | 'dark' | 'auto';
+    theme?: string;
+    activeThemeId?: string;
+    reducedMotion?: boolean;
+    customThemes?: any[];
+    themeStudioDraft?: any | null;
   };
   preview?: {
     codeBlockTheme?: string; // highlight.js theme (e.g., 'github', 'github-dark', 'monokai', etc.)
@@ -373,4 +377,3 @@ export function updateSettings(updates: Partial<Settings>): void {
   };
   saveDatabase();
 }
-

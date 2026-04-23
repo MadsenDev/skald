@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
 import { useVaultStore } from '../store/vaultStore';
 import { useSchemaStore } from '../store/schemaStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { loadTheme } from '../themes/themeLoader';
 import { registerMonacoTheme, getMonacoTheme } from '../themes/applyTheme';
+import { findThemeById, getDefaultThemeDefinition } from '../themes/themeSystem';
+import { toLegacyThemeShape } from '../themes/themes';
 import { parseFrontmatter, serializeFrontmatter } from '../utils/frontmatter';
 import { FrontmatterEditor } from './FrontmatterEditor';
 import { MarkdownPreview } from './MarkdownPreview';
@@ -37,18 +38,12 @@ export function NoteEditor({ notePath, onClose }: NoteEditorProps) {
   const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
   const { loadNotes, notes } = useVaultStore();
   const { schemas, loadSchemas, getSchemaById, parseSchema } = useSchemaStore();
-  const { loadSettings } = useSettingsStore();
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null>(null);
   const [zodSchema, setZodSchema] = useState<z.ZodObject<any> | null>(null);
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [editorInstance, setEditorInstance] = useState<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [isRefactorModalOpen, setIsRefactorModalOpen] = useState(false);
   const [selection, setSelection] = useState<{ text: string; startOffset: number; endOffset: number } | null>(null);
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   // Get editor settings with defaults - use settings from store
   const settings = useSettingsStore((state) => state.settings);
@@ -62,23 +57,16 @@ export function NoteEditor({ notePath, onClose }: NoteEditorProps) {
   };
 
   // Get Monaco editor theme
-  const themeId = settings.appearance?.theme ?? 'light';
-  const [theme, setTheme] = useState<any>(null);
+  const themeId = settings.appearance?.activeThemeId ?? settings.appearance?.theme ?? 'atelier-light';
+  const customThemes = settings.appearance?.customThemes ?? [];
+  const theme = useMemo(() => {
+    const definition = findThemeById(themeId, customThemes) ?? getDefaultThemeDefinition();
+    return toLegacyThemeShape(definition);
+  }, [themeId, customThemes]);
 
   const monacoRef = useRef<typeof Monaco | null>(null);
   const autocompleteDisposableRef = useRef<{ dispose: () => void } | null>(null);
   const autoLinkSuggestionsDisposableRef = useRef<{ dispose: () => void } | null>(null);
-  
-  // Load theme on mount and when themeId changes
-  useEffect(() => {
-    const loadThemeAsync = async () => {
-      const loadedTheme = await loadTheme(themeId);
-      if (loadedTheme) {
-        setTheme(loadedTheme);
-      }
-    };
-    loadThemeAsync();
-  }, [themeId]);
   
   const handleEditorMount: OnMount = (editorInstance, monacoInstance) => {
     editorRef.current = editorInstance;
@@ -103,29 +91,9 @@ export function NoteEditor({ notePath, onClose }: NoteEditorProps) {
       monacoInstance
     );
     
-    // Apply theme immediately - load if not already loaded
-    const applyTheme = async () => {
-      let themeToApply = theme;
-      if (!themeToApply) {
-        themeToApply = await loadTheme(themeId);
-        if (themeToApply) {
-          setTheme(themeToApply);
-        }
-      }
-      
-      if (themeToApply) {
-        registerMonacoTheme(monacoInstance, themeToApply);
-        const customThemeName = getMonacoTheme(themeToApply);
-        monacoInstance.editor.setTheme(customThemeName);
-      } else {
-        // Fallback to default theme
-        const isDark = themeId === 'dark' || themeId === 'matrix' || themeId === 'fire' || themeId === 'ocean' || themeId === 'neon' || themeId === 'glitch';
-        monacoInstance.editor.setTheme(isDark ? 'vs-dark' : 'vs');
-      }
-    };
-    
-    // Apply theme immediately (async, but don't block)
-    applyTheme();
+    registerMonacoTheme(monacoInstance, theme);
+    const customThemeName = getMonacoTheme(theme);
+    monacoInstance.editor.setTheme(customThemeName);
   };
   
   // Update Monaco theme when theme changes

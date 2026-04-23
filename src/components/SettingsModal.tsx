@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '../store/settingsStore';
 import { FiX, FiSettings, FiEdit3, FiSun, FiColumns, FiEye, FiCalendar } from 'react-icons/fi';
-import { getThemesByCategory } from '../themes/themes';
-import { applyThemeFromFile } from '../themes/themeLoader';
+import { ThemeStudio } from './ThemeStudio';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -39,7 +38,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center theme-overlay"
           onClick={onClose}
         >
           <motion.div
@@ -49,9 +48,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             transition={{ duration: 0.2 }}
             className="rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden"
             style={{
-              backgroundColor: 'var(--theme-bg-primary)',
+              backgroundColor: 'var(--theme-bg-elevated)',
               color: 'var(--theme-text-primary)',
               border: '1px solid var(--theme-border-primary)',
+              boxShadow: 'var(--theme-shadow-large)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -350,7 +350,6 @@ function AppearanceSettings({
   setSetting: (key: string, value: any) => Promise<void>;
 }) {
   const appearanceSettings = settings.appearance || {};
-  const currentThemeId = appearanceSettings.theme || 'light';
 
   return (
     <div className="space-y-8">
@@ -365,58 +364,9 @@ function AppearanceSettings({
           className="text-sm mb-6"
           style={{ color: 'var(--theme-text-tertiary)' }}
         >
-          Choose a theme that matches your style
+          Drive the full app shell, overlays, editor, and background layers from a reusable theme definition.
         </p>
-        <div>
-          <label
-            className="block text-sm font-medium mb-4"
-            style={{ color: 'var(--theme-text-primary)' }}
-          >
-            Theme
-          </label>
-          
-          {/* Standard Themes */}
-          <div className="mb-6">
-            <h4 className="text-xs font-semibold mb-3 uppercase tracking-wider" style={{ color: 'var(--theme-text-tertiary)' }}>
-              Standard
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {getThemesByCategory('standard').map((theme) => (
-                <ThemePreview
-                  key={theme.id}
-                  theme={theme}
-                  isSelected={currentThemeId === theme.id}
-                  onSelect={async () => {
-                    await applyThemeFromFile(theme.id);
-                    await setSetting('appearance.theme', theme.id);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          
-          {/* Drastic Themes */}
-          {getThemesByCategory('drastic').length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-xs font-semibold mb-3 uppercase tracking-wider" style={{ color: 'var(--theme-text-tertiary)' }}>
-                Drastic
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {getThemesByCategory('drastic').map((theme) => (
-                  <ThemePreview
-                    key={theme.id}
-                    theme={theme}
-                    isSelected={currentThemeId === theme.id}
-                    onSelect={async () => {
-                      await applyThemeFromFile(theme.id);
-                      await setSetting('appearance.theme', theme.id);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <ThemeStudio settings={settings} setSetting={setSetting} />
       </div>
       
       {/* Sidebar Note Display */}
@@ -468,112 +418,6 @@ function AppearanceSettings({
         </div>
       </div>
     </div>
-  );
-}
-
-function ThemePreview({
-  theme,
-  isSelected,
-  onSelect,
-}: {
-  theme: { id: string; name: string; description?: string; category?: string };
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const [themeColors, setThemeColors] = useState<{ bgPrimary: string; bgSecondary: string; textPrimary: string; textSecondary: string } | null>(null);
-
-  useEffect(() => {
-    // Load theme colors for preview
-    fetch(`/src/themes/themes/${theme.id}/theme.json`)
-      .then(res => res.json())
-      .then(config => {
-        setThemeColors({
-          bgPrimary: config.colors.bgPrimary,
-          bgSecondary: config.colors.bgSecondary,
-          textPrimary: config.colors.textPrimary,
-          textSecondary: config.colors.textSecondary,
-        });
-      })
-      .catch(() => {
-        // Fallback colors
-        setThemeColors({
-          bgPrimary: '#ffffff',
-          bgSecondary: '#f9fafb',
-          textPrimary: '#111827',
-          textSecondary: '#6b7280',
-        });
-      });
-  }, [theme.id]);
-
-  if (!themeColors) {
-    return (
-      <div className="theme-preview-card relative p-4 rounded-xl border-2 border-gray-200 bg-gray-50 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-      </div>
-    );
-  }
-
-  return (
-    <motion.button
-      onClick={onSelect}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="theme-preview-card relative p-4 rounded-xl border-2 transition-all text-left overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, ${themeColors.bgPrimary} 0%, ${themeColors.bgSecondary} 100%)`,
-        color: themeColors.textPrimary,
-        borderColor: isSelected ? 'var(--theme-accent)' : 'var(--theme-border-primary)',
-        boxShadow: isSelected
-          ? '0 0 0 3px color-mix(in srgb, var(--theme-accent) 20%, transparent)'
-          : 'none',
-      }}
-    >
-      {isSelected && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: 'var(--theme-accent)' }}
-        >
-          <svg className="w-3 h-3" style={{ color: 'var(--theme-accent-text)' }} fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </motion.div>
-      )}
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-sm" style={{ color: themeColors.textPrimary }}>
-          {theme.name}
-        </span>
-      </div>
-      {theme.description && (
-        <p className="text-xs opacity-75 mb-3" style={{ color: themeColors.textSecondary }}>
-          {theme.description}
-        </p>
-      )}
-      <div className="flex gap-1.5">
-        <div
-          className="w-6 h-6 rounded border"
-          style={{
-            backgroundColor: themeColors.bgPrimary,
-            borderColor: 'var(--theme-border-primary)',
-          }}
-          title="Primary"
-        />
-        <div
-          className="w-6 h-6 rounded border"
-          style={{
-            backgroundColor: themeColors.bgSecondary,
-            borderColor: 'var(--theme-border-primary)',
-          }}
-          title="Secondary"
-        />
-      </div>
-    </motion.button>
   );
 }
 
@@ -1023,4 +867,3 @@ function KanbanSettings({
     </div>
   );
 }
-

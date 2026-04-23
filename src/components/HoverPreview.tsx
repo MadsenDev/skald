@@ -132,7 +132,7 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -10 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="fixed z-[9999] w-80 bg-white border-2 border-gray-300 rounded-lg shadow-2xl max-h-96 overflow-hidden"
+      className="fixed z-[9999] w-80 rounded-2xl max-h-96 overflow-hidden theme-glass-panel"
       style={{
         left: `${position.x + 10}px`,
         top: `${position.y + 10}px`,
@@ -146,11 +146,11 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
       }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h3 className="font-semibold text-gray-900 truncate" title={noteTitle}>
+      <div className="px-4 py-3 border-b border-app-default bg-app-panel">
+        <h3 className="font-semibold text-primary truncate" title={noteTitle}>
           {noteTitle}
         </h3>
-        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-4 mt-1 text-xs text-muted">
           {lastEdited && (
             <span>Edited {lastEdited.toLocaleDateString()}</span>
           )}
@@ -163,25 +163,25 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
       {/* Content */}
       <div className="p-4 overflow-y-auto max-h-64">
         {loading ? (
-          <div className="text-sm text-gray-500">Loading...</div>
+          <div className="text-sm text-muted">Loading...</div>
         ) : noteContent ? (
-          <div className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+          <div className="text-sm text-secondary whitespace-pre-wrap font-mono">
             {getPreviewText(noteContent)}
           </div>
         ) : (
-          <div className="text-sm text-gray-500">Failed to load preview</div>
+          <div className="text-sm text-muted">Failed to load preview</div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex items-center gap-2">
+      <div className="px-4 py-2 border-t border-app-default bg-app-panel flex items-center gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onOpen();
             onClose();
           }}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-secondary hover-surface rounded transition-colors"
           title="Open note"
         >
           <FiExternalLink className="w-4 h-4" />
@@ -198,7 +198,7 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
             window.dispatchEvent(event);
             onClose();
           }}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-secondary hover-surface rounded transition-colors"
           title="Peek (open in side panel)"
         >
           <FiEye className="w-4 h-4" />
@@ -215,7 +215,7 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
             });
             onClose();
           }}
-          className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors"
+          className="px-3 py-1.5 text-sm text-secondary hover-surface rounded transition-colors"
           title="Pin preview (keep it open)"
         >
           <FiBookmark className="w-4 h-4" />
@@ -224,4 +224,3 @@ export function HoverPreview({ noteId, notePath, noteTitle, position, onOpen, on
     </motion.div>
   );
 }
-
