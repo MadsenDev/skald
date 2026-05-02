@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { OnMount, loader } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
 import type * as Monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor';
+
+// Use locally bundled monaco-editor instead of CDN
+loader.config({ monaco });
 import { useVaultStore } from '../store/vaultStore';
 import { useSchemaStore } from '../store/schemaStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -168,7 +172,7 @@ export function NoteEditor({ notePath, onClose }: NoteEditorProps) {
 
   const loadNote = async () => {
     if (!notePath) return;
-    
+
     setLoading(true);
     try {
       const text = await window.api.vault.readFile(notePath);
@@ -176,11 +180,11 @@ export function NoteEditor({ notePath, onClose }: NoteEditorProps) {
       setFrontmatter(parsed.frontmatter);
       setBodyContent(parsed.content);
       setContent(text);
-      
+
       // Find current note ID for backlinks
       const currentNote = notes.find(n => n.path === notePath);
       setCurrentNoteId(currentNote?.id || null);
-      
+
       // Try to find schema from frontmatter
       if (parsed.frontmatter.schema) {
         const schema = schemas.find(s => s.name === parsed.frontmatter.schema);

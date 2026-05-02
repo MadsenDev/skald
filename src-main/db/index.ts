@@ -329,6 +329,8 @@ export function setKanbanSettings(kanban: Settings['kanban']): void {
   saveDatabase();
 }
 
+const PROTO_BANNED = new Set(['__proto__', 'constructor', 'prototype']);
+
 // Generic settings functions
 export function getAllSettings(): Settings {
   const database = getDatabase();
@@ -338,9 +340,14 @@ export function getAllSettings(): Settings {
 export function getSettings<T = any>(key: string): T | undefined {
   const database = getDatabase();
   const keys = key.split('.');
+
+  if (keys.some(k => PROTO_BANNED.has(k))) {
+    return undefined;
+  }
+
   let value: any = database.settings;
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
+    if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, k)) {
       value = value[k];
     } else {
       return undefined;
@@ -352,9 +359,13 @@ export function getSettings<T = any>(key: string): T | undefined {
 export function setSettings(key: string, value: any): void {
   const database = getDatabase();
   const keys = key.split('.');
+
+  if (keys.some(k => PROTO_BANNED.has(k))) {
+    throw new Error(`Illegal settings key: ${key}`);
+  }
+
   let current: any = database.settings;
-  
-  // Navigate to the parent object
+
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i];
     if (!(k in current) || typeof current[k] !== 'object' || current[k] === null) {
@@ -362,8 +373,7 @@ export function setSettings(key: string, value: any): void {
     }
     current = current[k];
   }
-  
-  // Set the value
+
   const lastKey = keys[keys.length - 1];
   current[lastKey] = value;
   saveDatabase();

@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { initializeDatabase, getAllSchemas, insertSchema, getSchema, updateSchema, deleteSchema, getLastVaultPath, setLastVaultPath, getKanbanSettings, setKanbanSettings, getAllSettings, getSettings, setSettings, updateSettings, Settings, getBacklinks } from './db/index.js';
-import { getAllTasks, getTasksByNote, updateTask, deleteTask, getTask, reorderTasksByStatus } from './db/tasks.js';
+import { getAllTasks, getTasksByNote, updateTask, deleteTask, getTask, reorderTasksByStatus, Task } from './db/tasks.js';
 import { VaultManager } from './vault/manager.js';
 import { defaultSchemas } from './schemas/defaultSchemas.js';
 import { serializeZodSchema } from './db/schemas.js';
@@ -26,6 +26,8 @@ function createWindow() {
       preload: join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      // sandbox: true breaks ipcRenderer.invoke in CJS preloads on Electron 31 dev mode.
+      // contextIsolation + !nodeIntegration provides the same renderer isolation guarantee.
       sandbox: false,
     },
   });
@@ -200,7 +202,9 @@ ipcMain.handle('task:getByNote', async (_event, noteId: string) => {
   return await getTasksByNote(noteId);
 });
 
-ipcMain.handle('task:update', async (_event, id: string, updates: any) => {
+type TaskUpdates = Partial<Pick<Task, 'status' | 'content' | 'priority' | 'dueDate' | 'assignedTo' | 'labels' | 'order'>>;
+
+ipcMain.handle('task:update', async (_event, id: string, updates: TaskUpdates) => {
   // Get the task to find the note ID and line anchor
   const task = await getTask(id);
   if (!task) {

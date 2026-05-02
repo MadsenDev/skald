@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import DOMPurify from 'dompurify';
 import { useSettingsStore } from '../store/settingsStore';
 import { useVaultStore } from '../store/vaultStore';
 import { parseWikilink } from '../utils/wikilinks';
@@ -13,8 +14,13 @@ import { remarkBlockIds } from '../utils/remark/remarkBlockIds';
 import { remarkBlockRefs } from '../utils/remark/remarkBlockRefs';
 import { Callout } from './Callout';
 import { BlockRef } from './BlockRef';
-// Import default highlight.js CSS as fallback
 import 'highlight.js/styles/github.css';
+
+// Pre-bundle all highlight.js themes from node_modules (absolute project-root path)
+const hlThemes = import.meta.glob<string>(
+  '/node_modules/highlight.js/styles/*.min.css',
+  { query: '?inline', import: 'default', eager: false }
+);
 
 interface MarkdownPreviewProps {
   content: string;
@@ -106,44 +112,23 @@ export function MarkdownPreview({ content, className = '' }: MarkdownPreviewProp
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Dynamically load highlight.js theme CSS
-  // Use a shared approach to avoid conflicts between multiple MarkdownPreview instances
+  // Load highlight.js theme from bundled node_modules (no CDN)
   useEffect(() => {
-    const existingLink = document.getElementById('highlight-theme') as HTMLLinkElement | null;
-    
-    // Map invalid theme names to valid ones
-    const themeMap: Record<string, string> = {
-      'vs': 'vs2015', // 'vs' doesn't exist, use 'vs2015' instead
-    };
+    const themeMap: Record<string, string> = { 'vs': 'vs2015' };
     const validTheme = themeMap[codeTheme] || codeTheme;
-    const themeUrl = `https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/${validTheme}.min.css`;
-    
-    // Only update if theme actually changed
-    if (existingLink && existingLink.href === themeUrl) {
-      // Theme is already loaded and correct, no need to change
-      return;
-    }
-    
-    // Remove old theme if it exists and is different
-    if (existingLink) {
-      existingLink.remove();
-    }
+    const key = `/node_modules/highlight.js/styles/${validTheme}.min.css`;
+    const loader = hlThemes[key];
+    if (!loader) return;
 
-    // Load new theme CSS
-    const link = document.createElement('link');
-    link.id = 'highlight-theme';
-    link.rel = 'stylesheet';
-    link.href = themeUrl;
-    link.onload = () => {
-      console.log(`Loaded highlight.js theme: ${codeTheme}`);
-    };
-    link.onerror = () => {
-      console.error(`Failed to load highlight.js theme: ${codeTheme}`);
-    };
-    document.head.appendChild(link);
-
-    // Don't remove on unmount - other MarkdownPreview instances might be using it
-    // The theme will be updated when codeTheme changes, not when component unmounts
+    loader().then((css) => {
+      let el = document.getElementById('highlight-theme-inline') as HTMLStyleElement | null;
+      if (!el) {
+        el = document.createElement('style');
+        el.id = 'highlight-theme-inline';
+        document.head.appendChild(el);
+      }
+      el.textContent = css;
+    });
   }, [codeTheme]);
 
   const handleOpenNote = () => {
@@ -297,8 +282,8 @@ export function MarkdownPreview({ content, className = '' }: MarkdownPreviewProp
               return <BlockRef blockId={blockRefMatch[1]} {...props} />;
             }
             
-            // Default HTML rendering (for other HTML)
-            return <div dangerouslySetInnerHTML={{ __html: value }} {...props} />;
+            // Default HTML rendering — sanitize before injection
+            return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }} {...props} />;
           },
           // Links - handle both regular links and wikilinks
           a: ({ children, href }: any) => {

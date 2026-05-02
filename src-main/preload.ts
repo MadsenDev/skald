@@ -26,7 +26,7 @@ type Channels = {
   'schema:delete': (id: string) => Promise<void>;
   'task:list': (filters?: { status?: string; noteId?: string; assignedTo?: string; labels?: string[] }) => Promise<Array<any>>;
   'task:getByNote': (noteId: string) => Promise<Array<any>>;
-  'task:update': (id: string, updates: any) => Promise<void>;
+  'task:update': (id: string, updates: { status?: 'open' | 'in-progress' | 'done' | 'cancelled'; content?: string; priority?: number; dueDate?: number | null; assignedTo?: string | null; labels?: string[]; order?: number }) => Promise<void>;
   'task:delete': (id: string) => Promise<void>;
   'search:query': (query: string) => Promise<Array<any>>;
   'search:getAll': () => Promise<Array<any>>;
@@ -159,7 +159,7 @@ declare global {
       task: {
         list: (filters?: { status?: string; noteId?: string; assignedTo?: string; labels?: string[] }) => Promise<Array<any>>;
         getByNote: (noteId: string) => Promise<Array<any>>;
-        update: (id: string, updates: any) => Promise<void>;
+        update: (id: string, updates: { status?: 'open' | 'in-progress' | 'done' | 'cancelled'; content?: string; priority?: number; dueDate?: number | null; assignedTo?: string | null; labels?: string[]; order?: number }) => Promise<void>;
         delete: (id: string) => Promise<void>;
         reorder: (status: 'open' | 'in-progress' | 'done' | 'cancelled', orderedIds: string[]) => Promise<void>;
       };

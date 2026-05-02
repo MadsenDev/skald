@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"npm run build:electron && wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "electron:pack": "npm run build && electron-builder",
+    "pack:linux": "npm run build && electron-builder --linux",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -22,8 +23,35 @@
     "crdt",
     "collaboration"
   ],
-  "author": "",
+  "author": "Christoffer Madsen <chris@madsens.dev>",
   "license": "MIT",
+  "build": {
+    "appId": "dev.madsens.skald",
+    "productName": "Skald",
+    "copyright": "Copyright © 2026 Christoffer Madsen",
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "linux": {
+      "icon": "build/icons",
+      "category": "Utility",
+      "target": [
+        { "target": "AppImage", "arch": ["x64", "arm64"] },
+        { "target": "deb",      "arch": ["x64", "arm64"] },
+        { "target": "rpm",      "arch": ["x64", "arm64"] },
+        { "target": "pacman",   "arch": ["x64", "arm64"] }
+      ],
+      "maintainer": "Christoffer Madsen <chris@madsens.dev>",
+      "vendor": "Christoffer Madsen",
+      "synopsis": "Local-first Markdown knowledge base",
+      "description": "Skald is a local-first Markdown note-taking app with schema-driven frontmatter, task management, and multi-theme UI."
+    }
+  },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
@@ -48,6 +76,7 @@
     "@lexical/rich-text": "^0.38.2",
     "@lexical/utils": "^0.38.2",
     "@monaco-editor/react": "^4.6.0",
+    "@types/dompurify": "^3.0.5",
     "chokidar": "^3.5.3",
     "framer-motion": "^10.16.16",
     "lexical": "^0.38.2",

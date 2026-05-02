@@ -8,19 +8,30 @@ import {
   updateNote,
   getAllNotes,
   deleteNoteByPath,
+  updateBacklinks,
+  findNoteByTitle,
 } from '../db/index.js';
 import { extractTasks } from '../tasks/extractor.js';
-import { insertTask, deleteTasksByNote, getTasksByNote, getTaskByNoteAndLine } from '../db/tasks.js';
+import { insertTask, deleteTasksByNote, getTasksByNote } from '../db/tasks.js';
 import { indexNote as indexNoteForSearch, indexTasks as indexTasksForSearch, removeNoteDocuments } from '../search/indexer.js';
 import { extractWikilinks } from '../utils/wikilinks.js';
-import { updateBacklinks, findNoteByTitle, getAllNotes } from '../db/index.js';
 import * as Y from 'yjs';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
+
+const YDOC_CACHE_MAX = 100;
 
 export class VaultManager {
   private vaultPath: string;
   private watcher: FSWatcher | null = null;
   private ydocs: Map<string, Y.Doc> = new Map();
+
+  private setYdoc(ydocId: string, ydoc: Y.Doc): void {
+    if (this.ydocs.size >= YDOC_CACHE_MAX) {
+      const firstKey = this.ydocs.keys().next().value;
+      if (firstKey !== undefined) this.ydocs.delete(firstKey);
+    }
+    this.ydocs.set(ydocId, ydoc);
+  }
 
   constructor(vaultPath: string) {
     this.vaultPath = vaultPath;
@@ -94,12 +105,12 @@ export class VaultManager {
         const ydoc = new Y.Doc();
         const ytext = ydoc.getText('content');
         ytext.insert(0, content);
-        this.ydocs.set(ydocId, ydoc);
+        this.setYdoc(ydocId, ydoc);
         
         // Save Yjs doc to disk
         await this.saveYdoc(ydocId, ydoc);
         
-        const note = await insertNote({
+        await insertNote({
           id: noteId,
           path: relativePath,
           title,
@@ -114,7 +125,7 @@ export class VaultManager {
         await this.extractAndUpdateBacklinks(noteId, content);
         
         // Index for search
-        indexNoteForSearch(noteId, relativePath, title, content, undefined, null, Date.now());
+        indexNoteForSearch(noteId, relativePath, title, content, undefined, undefined, Date.now());
         indexTasksForSearch(noteId, content, relativePath);
       } else {
         // Update existing note
@@ -122,7 +133,7 @@ export class VaultManager {
         let ydoc = this.ydocs.get(ydocId);
         if (!ydoc) {
           ydoc = await this.loadYdoc(ydocId);
-          this.ydocs.set(ydocId, ydoc);
+          this.setYdoc(ydocId, ydoc);
         }
         
         const ytext = ydoc.getText('content');
@@ -142,7 +153,7 @@ export class VaultManager {
             await this.extractAndUpdateBacklinks(existing.id, content);
 
             // Update search index
-            indexNoteForSearch(existing.id, relativePath, title, content, undefined, existing.schemaId, Date.now());
+            indexNoteForSearch(existing.id, relativePath, title, content, undefined, existing.schemaId ?? undefined, Date.now());
             indexTasksForSearch(existing.id, content, relativePath);
       }
     } catch (err) {
@@ -181,9 +192,9 @@ export class VaultManager {
           await updateTask(existingTask.id, {
             content: task.content,
             status: task.status,
-            priority: task.priority,
-            dueDate: task.dueDate,
-            assignedTo: task.assignedTo,
+            priority: task.priority ?? 0,
+            dueDate: task.dueDate ? new Date(task.dueDate).getTime() : null,
+            assignedTo: task.assignedTo ?? null,
             labels: task.labels,
           });
         } else {
@@ -193,9 +204,9 @@ export class VaultManager {
             lineAnchor: task.lineAnchor,
             content: task.content,
             status: task.status,
-            priority: task.priority,
-            dueDate: task.dueDate,
-            assignedTo: task.assignedTo,
+            priority: task.priority ?? 0,
+            dueDate: task.dueDate ? new Date(task.dueDate).getTime() : null,
+            assignedTo: task.assignedTo ?? null,
             labels: task.labels,
           });
         }
@@ -287,22 +298,28 @@ export class VaultManager {
     }));
   }
 
+  private assertWithinVault(fullPath: string): void {
+    const normalized = fullPath.replace(/\\/g, '/');
+    const vaultNormalized = this.vaultPath.replace(/\\/g, '/');
+    if (!normalized.startsWith(vaultNormalized + '/') && normalized !== vaultNormalized) {
+      throw new Error(`Path escapes vault: ${fullPath}`);
+    }
+  }
+
   async readFile(path: string): Promise<string> {
     const fullPath = join(this.vaultPath, path);
+    this.assertWithinVault(fullPath);
     return await readFile(fullPath, 'utf-8');
   }
 
   async writeFile(path: string, content: string): Promise<void> {
     const fullPath = join(this.vaultPath, path);
+    this.assertWithinVault(fullPath);
     await mkdir(dirname(fullPath), { recursive: true });
     await writeFile(fullPath, content, 'utf-8');
-    
+
     // Re-index the note to update tasks
     await this.indexNote(fullPath);
-  }
-
-  getPath(): string {
-    return this.vaultPath;
   }
 
   async createNote(path: string) {
@@ -310,11 +327,13 @@ export class VaultManager {
     const cleanPath = path.endsWith('.md') ? path.slice(0, -3) : path;
     const fileName = `${basename(cleanPath)}.md`;
     const folderPath = dirname(cleanPath);
-    
+
     // Build full path - if folderPath is '.', it's in root notes folder
     const fullPath = folderPath === '.' || folderPath === ''
       ? join(this.vaultPath, 'notes', fileName)
       : join(this.vaultPath, 'notes', folderPath, fileName);
+
+    this.assertWithinVault(fullPath);
     
     // Calculate relative path properly
     const relativePath = folderPath === '.' || folderPath === ''
@@ -341,11 +360,9 @@ export class VaultManager {
   }
 
   async createFolder(folderPath: string): Promise<void> {
-    // Sanitize folder path
     const cleanPath = folderPath.replace(/[<>:"|?*]/g, '_');
     const fullPath = join(this.vaultPath, 'notes', cleanPath);
-    
-    // Create folder recursively
+    this.assertWithinVault(fullPath);
     await mkdir(fullPath, { recursive: true });
   }
 
@@ -379,16 +396,15 @@ export class VaultManager {
   }
 
   async moveNote(oldPath: string, newPath: string): Promise<void> {
-    // Ensure newPath has .md extension if oldPath had it
     if (oldPath.endsWith('.md') && !newPath.endsWith('.md')) {
       newPath = newPath + '.md';
     }
-    
-    // Build full paths
+
     const oldFullPath = join(this.vaultPath, oldPath);
     const newFullPath = join(this.vaultPath, newPath);
-    
-    // Ensure the destination directory exists
+    this.assertWithinVault(oldFullPath);
+    this.assertWithinVault(newFullPath);
+
     await mkdir(dirname(newFullPath), { recursive: true });
     
     // Move the file
@@ -406,11 +422,11 @@ export class VaultManager {
   }
 
   async moveFolder(oldPath: string, newPath: string): Promise<void> {
-    // Build full paths
     const oldFullPath = join(this.vaultPath, 'notes', oldPath);
     const newFullPath = join(this.vaultPath, 'notes', newPath);
-    
-    // Ensure the destination parent directory exists
+    this.assertWithinVault(oldFullPath);
+    this.assertWithinVault(newFullPath);
+
     await mkdir(dirname(newFullPath), { recursive: true });
     
     // Get all notes in the folder BEFORE moving (so we can update their database entries)
@@ -455,6 +471,7 @@ export class VaultManager {
 
   async deleteNote(path: string): Promise<void> {
     const fullPath = join(this.vaultPath, path);
+    this.assertWithinVault(fullPath);
     const note = await getNoteByPath(path);
     
     if (note) {
@@ -479,6 +496,7 @@ export class VaultManager {
 
   async deleteFolder(folderPath: string): Promise<void> {
     const fullPath = join(this.vaultPath, 'notes', folderPath);
+    this.assertWithinVault(fullPath);
     
     // Get all notes in this folder and subfolders
     const allNotes = await getAllNotes();
