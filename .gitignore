@@ -39,3 +39,6 @@ lerna-debug.log*
 
 /release
 /.rist
+
+# Skald vault index (if a vault is opened inside the repo)
+.skald/

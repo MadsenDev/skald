@@ -1,26 +1,36 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import { builtinModules } from 'module';
 
+// Builds the Electron main process and preload script.
+// Invoked twice: `--mode main` and `--mode preload`.
 export default defineConfig(({ mode }) => {
-  const isPreload = mode === 'preload';
-
+  if (mode === 'preload') {
+    return {
+      build: {
+        outDir: 'dist-electron',
+        emptyOutDir: false,
+        lib: {
+          entry: 'src-main/preload.ts',
+          formats: ['cjs'],
+          fileName: () => 'preload.cjs',
+        },
+        rollupOptions: {
+          external: ['electron'],
+        },
+      },
+    };
+  }
   return {
     build: {
       outDir: 'dist-electron',
-      emptyOutDir: false, // Don't clear the directory between builds
-      rollupOptions: {
-        input: isPreload
-          ? resolve(__dirname, 'src-main/preload.ts')
-          : resolve(__dirname, 'src-main/main.ts'),
-        external: ['electron', ...builtinModules],
-        output: {
-          entryFileNames: isPreload ? '[name].cjs' : '[name].js',
-          format: isPreload ? 'cjs' : 'es',
-        },
+      emptyOutDir: false,
+      lib: {
+        entry: 'src-main/main.ts',
+        formats: ['es'],
+        fileName: () => 'main.js',
       },
-      target: 'node18',
-      minify: false,
+      rollupOptions: {
+        external: ['electron', 'chokidar', /^node:/],
+      },
     },
   };
 });

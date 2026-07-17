@@ -1,0 +1,157 @@
+/* ============================================================
+   Skald — functional additions on top of the design system:
+   window drag, source editor, dialogs, menus, vault picker.
+   ============================================================ */
+
+/* window dragging */
+.titlebar { -webkit-app-region: drag; user-select: none; }
+.titlebar button, .titlebar .avatar { -webkit-app-region: no-drag; }
+.traffic span { cursor: pointer; border: none; padding: 0; -webkit-app-region: no-drag; position: relative; }
+.traffic span:hover { filter: brightness(1.15); }
+
+/* ---------- editor: source mode ---------- */
+.editor-source {
+  width: 100%; min-height: calc(100vh - 260px);
+  background: transparent; border: none; outline: none; resize: none;
+  color: var(--tx-1); font-family: var(--font-mono);
+  font-size: 13.5px; line-height: 1.7; tab-size: 2;
+  caret-color: var(--ac);
+}
+.editor-mode-toggle { display: inline-flex; gap: 2px; background: var(--bg-1); padding: 2px; border-radius: var(--r-2); border: 1px solid var(--line); margin-left: auto; }
+.editor-mode-toggle button { border: none; background: transparent; padding: 2px 9px; border-radius: var(--r-1); color: var(--tx-3); font-size: 11px; font-family: var(--font-mono); }
+.editor-mode-toggle button[aria-selected="true"] { background: var(--bg-3); color: var(--tx-0); }
+.editor-title-input {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-size: 31px; line-height: 1.18; font-weight: 700; letter-spacing: -0.015em;
+  color: var(--tx-0); font-family: var(--font-ui); padding: 0; margin: 0 0 22px;
+}
+.editor-title-input:focus { border-bottom: 1px solid var(--ac-line); }
+
+/* extended body elements the mock didn't render */
+.editor-body h3, .editor-body h4 {
+  font-size: 15.5px; font-weight: 600; color: var(--tx-0); margin: 26px 0 10px;
+}
+.editor-body h1.body-h1 { font-size: 24px; font-weight: 700; color: var(--tx-0); margin: 30px 0 14px; letter-spacing: -0.01em; }
+.editor-body hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+.editor-body pre.codeblock {
+  margin: 20px 0; padding: 14px 16px; overflow-x: auto;
+  background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-3);
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: var(--tx-1);
+}
+.editor-body pre.codeblock code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+.editor-body ul.plain, .editor-body ol.plain { margin: 4px 0 18px; padding-left: 24px; display: flex; flex-direction: column; gap: 5px; }
+.editor-body ul.plain li::marker { color: var(--ac); }
+.editor-body ol.plain li::marker { color: var(--tx-3); font-family: var(--font-mono); font-size: 12px; }
+.editor-empty-hint { color: var(--tx-3); font-style: italic; font-size: 14px; }
+
+/* margin: tasks group */
+.margin__task { display: flex; align-items: center; gap: 9px; padding: 6px 4px; font-size: 12.5px; color: var(--tx-2); border-bottom: 1px solid var(--line); }
+.margin__task .checkbox { width: 13px; height: 13px; }
+.margin__task .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.margin__task[data-done="true"] .t { color: var(--tx-4); text-decoration: line-through; }
+.margin__task .due { font-family: var(--font-mono); font-size: 10px; color: var(--tx-4); }
+.margin__task .due.over { color: var(--err); }
+
+/* ---------- dialogs ---------- */
+.dialog-scrim {
+  position: fixed; inset: 0; background: rgba(4,6,9,0.55); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 18vh; z-index: 120;
+}
+.dialog {
+  width: min(460px, 92vw); background: var(--bg-pop); border: 1px solid var(--line-2);
+  border-radius: var(--r-4); box-shadow: var(--shadow-pop); padding: 20px 22px;
+}
+.dialog h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; color: var(--tx-0); }
+.dialog .lede { margin: 0 0 16px; font-size: 12.5px; color: var(--tx-3); }
+.dialog label { display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx-3); margin: 14px 0 6px; }
+.dialog input[type="text"], .dialog select {
+  width: 100%; height: 32px; padding: 0 10px;
+  background: var(--bg-2); color: var(--tx-0); font-size: 13.5px; font-family: var(--font-ui);
+  border: 1px solid var(--line-2); border-radius: var(--r-2); outline: none;
+}
+.dialog input[type="text"]:focus, .dialog select:focus { border-color: var(--ac-line); }
+.dialog .dialog__schemas { display: flex; flex-wrap: wrap; gap: 6px; }
+.dialog .dialog__schemas button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px;
+  color: var(--tx-2); font-size: 12px;
+}
+.dialog .dialog__schemas button[aria-selected="true"] { background: var(--ac-ghost); border-color: var(--ac-line); color: var(--ac); }
+.dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.dialog .danger { color: var(--err); }
+.dialog__error { margin-top: 10px; font-size: 12.5px; color: var(--err); }
+
+/* ---------- context menu ---------- */
+.ctx-menu {
+  position: fixed; z-index: 140; min-width: 190px;
+  background: var(--bg-pop); border: 1px solid var(--line-2); border-radius: var(--r-3);
+  box-shadow: var(--shadow-pop); padding: 5px; font-size: 13px;
+}
+.ctx-menu button {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 10px; border: none; background: transparent; color: var(--tx-1);
+  border-radius: var(--r-1); text-align: left;
+}
+.ctx-menu button:hover { background: var(--bg-3); color: var(--tx-0); }
+.ctx-menu button.danger { color: var(--err); }
+.ctx-menu .sep { height: 1px; background: var(--line); margin: 5px 6px; }
+
+/* ---------- vault picker (first run) ---------- */
+.vault-picker {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, color-mix(in oklab, var(--ac) 6%, transparent), transparent 55%), var(--bg-0);
+}
+.vault-picker__card { width: min(520px, 90vw); text-align: center; padding: 40px 20px; }
+.vault-picker__logo { display: flex; justify-content: center; margin-bottom: 18px; }
+.vault-picker h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.015em; color: var(--tx-0); margin: 0 0 8px; }
+.vault-picker .lede { font-size: 14px; color: var(--tx-2); line-height: 1.6; margin: 0 auto 28px; max-width: 400px; }
+.vault-picker__actions { display: flex; flex-direction: column; gap: 10px; max-width: 340px; margin: 0 auto; }
+.vault-picker__actions .btn { height: 40px; justify-content: center; font-size: 13.5px; }
+.vault-picker__last { margin-top: 22px; font-family: var(--font-mono); font-size: 11.5px; color: var(--tx-3); }
+.vault-picker__last button { background: none; border: none; color: var(--ac); font-family: inherit; font-size: inherit; padding: 0 3px; }
+.vault-picker__last button:hover { text-decoration: underline; }
+
+/* ---------- tasks extras ---------- */
+.tasks-bar__filters .tag { cursor: pointer; user-select: none; }
+.tasks-bar__filters .tag:hover { border-color: var(--line-3); color: var(--tx-1); }
+.task-table tr, .kanban-card, .calendar__event, .thread-list__row, .recent-list__row { cursor: pointer; }
+.status { cursor: pointer; }
+.kanban__col.drop-target { border-color: var(--ac-line); background: var(--ac-ghost); }
+.kanban-card.dragging { opacity: 0.45; }
+.add-task-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-top: 4px;
+  border: 1px dashed var(--line-2); border-radius: var(--r-2);
+}
+.add-task-row input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--tx-0); font-size: 13.5px; font-family: var(--font-ui);
+}
+.add-task-row input::placeholder { color: var(--tx-3); }
+
+/* ---------- graph extras ---------- */
+.constellation svg text { user-select: none; }
+.constellation .node { cursor: grab; }
+.constellation .node:active { cursor: grabbing; }
+.constellation__empty {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--tx-3); font-size: 13.5px; font-style: italic; pointer-events: none;
+}
+
+/* ---------- settings extras ---------- */
+.settings__row__r select {
+  height: 30px; padding: 0 10px; background: var(--bg-1); color: var(--tx-0);
+  border: 1px solid var(--line-2); border-radius: var(--r-2); font-size: 12.5px; outline: none;
+}
+.settings__kv { font-family: var(--font-mono); font-size: 12px; color: var(--tx-2); word-break: break-all; }
+
+/* ---------- misc ---------- */
+.view-host { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.empty-note {
+  padding: 40px; color: var(--tx-3); font-size: 13.5px; font-style: italic; text-align: center;
+}
+.toast {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-pop); border: 1px solid var(--line-2); border-radius: var(--r-3);
+  box-shadow: var(--shadow-pop); padding: 9px 16px; font-size: 12.5px; color: var(--tx-1); z-index: 200;
+}
+.logbook__daily-btn { margin-top: 14px; }
