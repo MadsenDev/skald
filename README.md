@@ -1,66 +1,74 @@
 # Skald
 
-Skald is an Electron desktop knowledge-base app aimed at a local-first, schema-aware note workflow with room for future collaboration features.
+Skald is a local-first Markdown knowledge base. A *skáld* was an Old Norse poet — the one
+who kept the saga alive. Skald treats your vault the same way: notes are pages of a saga,
+tasks are open threads, and the knowledge graph is a constellation you can return to.
 
-The product direction in the planning docs often uses the name `ForgeNote`: an Obsidian-like vault with stronger structured data, task extraction, search, and eventually safer collaboration and plugin boundaries. The repository name remains `skald`.
+Everything is plain Markdown files in a folder you own. Skald keeps its index, settings,
+and graph layout in a `.skald/` directory inside the vault — delete it and nothing of
+yours is lost.
 
-## Current scope
+![The Logbook — Skald's Today view](docs/screenshots/logbook.png)
 
-The app already contains working foundations for:
+## What it does
 
-- vault selection and vault loading
-- note list and note editor flows
-- markdown editing and preview tooling
-- task views in table, kanban, and calendar form
-- quick switcher and search flows
-- daily notes dashboard
-- quick capture flows
-- theme loading, theme studio, and animated backgrounds
-- Electron shell with preload bridge
+- **Typed notes** — every note has a schema (`Note`, `Project`, `Person`, `Daily`, `Idea`,
+  `Source`, `Code`, `Place`), set via frontmatter or inferred from its folder. Each schema
+  carries a monoline rune that follows the note everywhere it's mentioned.
+- **Threads** — any `- [ ]` checkbox you write becomes a task in the global Table, Kanban,
+  and Calendar views. Edits propagate both ways: check it in the board and the Markdown
+  file is rewritten; metadata rides along as `@due(2026-06-01) @p(high) @status(working) #tag`.
+- **Wikilinks & backlinks** — `[[Note]]` links resolve across the vault; the editor's
+  right panel shows backlinks with snippets, threads in the note, and the outline.
+  Renaming a note rewrites every wikilink that points at it.
+- **The Logbook** — the Today view: week activity, open threads, the saga (recent
+  activity), recently touched notes, a pinned note, and honest vault stats.
+- **The Constellation** — a stable graph. Star positions are laid out once, persisted, and
+  draggable; folders appear as named clusters. Your map is a place, not a simulation.
+- **Skald's Hall** — `⌘K` fuzzy search across notes, tasks, and commands with a live
+  preview pane.
+- **Three surfaces** — Midnight, Slate, and Daybreak themes; three densities; three marks.
 
-## Tech stack
+## Screenshots
 
-- Electron
-- React
-- Vite
-- TypeScript
-- Lexical
-- Monaco Editor
-- Yjs
-- Zustand
-- Tailwind CSS
+| | |
+| --- | --- |
+| ![Editor with margin panel](docs/screenshots/editor.png) *Editor — reading view, typed frontmatter, backlinks margin* | ![Source view](docs/screenshots/editor-src.png) *Editor — source view with autosave* |
+| ![Kanban board](docs/screenshots/tasks-kanban.png) *Threads — kanban, drag to change status* | ![Task table](docs/screenshots/tasks-table.png) *Threads — table* |
+| ![Calendar](docs/screenshots/tasks-calendar.png) *Threads — calendar* | ![Constellation graph](docs/screenshots/graph.png) *The Constellation — stable, draggable star map* |
+| ![Command palette](docs/screenshots/switcher.png) *Skald's Hall — ⌘K fuzzy search with preview* | ![Daybreak theme](docs/screenshots/settings-light.png) *Settings — the Daybreak surface* |
 
 ## Development
 
 ```bash
 npm install
-npm run electron:dev
-```
-
-Useful commands:
-
-```bash
-npm run build
+npm run electron:dev   # dev server + electron
 npm run typecheck
-npm run electron:pack
+npm test               # vitest — core logic + vault end-to-end
+npm run electron:pack  # build distributables
 ```
 
-## Project structure
+Repo layout:
 
-- `src/App.tsx`: application shell
-- `src/components/`: vault, notes, editor, tasks, quick capture, search, and theme UI
-- `src/store/`: vault, task, schema, search, settings, and pinned-preview state
-- `src/themes/`: theme system, loading, and application
-- `src/utils/`: wikilinks, frontmatter, schema parsing, task formatting, and editor helpers
+- `src-main/` — Electron main process: vault manager (scan, watch, index, tasks,
+  backlinks, graph layout), IPC, window.
+- `src/` — renderer: React + plain CSS design tokens (no CSS framework).
+- `src-shared/` — pure logic shared by both: frontmatter, tasks, wikilinks, fuzzy search.
+- `tests/` — vitest suites, including an end-to-end suite driving a real temp vault.
+- `archive/skald-v1/` — the previous implementation, kept for reference only.
 
-## Planning docs
+## Keyboard
 
-Read these before making major product or architecture changes:
+| Key | Action |
+| --- | --- |
+| `⌘K` / `⌘P` | Command palette |
+| `⌘D` | Today's logbook |
+| `⌘N` | New note |
+| `⌘E` | Toggle reading / source view |
+| `⌘B` | Toggle right panel |
+| `⌘G` | Constellation |
+| `⌘S` | Save now (autosave is always on) |
 
-- `PROJECT.md`
-- `FEATURES.md`
+## License
 
-## Notes
-
-- The README describes the implemented foundations, not a promise that collaboration features are complete.
-- Use the planning docs to distinguish current behavior from longer-term product direction.
+MIT © Christoffer Madsen

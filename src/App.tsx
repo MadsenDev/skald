@@ -1,270 +1,168 @@
-import { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { VaultSelector } from './components/VaultSelector';
-import { LoadingScreen } from './components/LoadingScreen';
-import { PinnedPreviewComponent } from './components/PinnedPreview';
-import { usePinnedPreviewsStore } from './store/pinnedPreviewsStore';
-import { NoteEditor } from './components/NoteEditor';
-import { NoteList } from './components/NoteList';
-import { TaskTableView } from './components/TaskTableView';
-import { TaskKanbanView } from './components/TaskKanbanView';
-import { TaskCalendarView } from './components/TaskCalendarView';
-import { QuickSwitcher } from './components/QuickSwitcher';
-import { DailyNotesDashboard } from './components/DailyNotesDashboard';
-import { QuickCapture } from './components/QuickCapture';
-import { TaskFilters } from './components/TaskFilters';
-import { TitleBar } from './components/TitleBar';
-import { AnimationLayer } from './components/AnimationLayer';
-import { useVaultStore } from './store/vaultStore';
-import { useSettingsStore } from './store/settingsStore';
-import { FiFileText, FiCheckSquare } from 'react-icons/fi';
-import { SettingsModal } from './components/SettingsModal';
-import { ThemeBackground } from './components/ThemeBackground';
-import { applyActiveThemeFromSettings } from './themes/useTheme';
-import { getDefaultThemeDefinition } from './themes/themeSystem';
+import { Fragment, useEffect, useState } from 'react';
+import { useStore } from './store';
+import { TitleBar } from './chrome/TitleBar';
+import { ActivityBar } from './chrome/ActivityBar';
+import { Sidebar, allFolderPaths } from './chrome/Sidebar';
+import { TabStrip } from './chrome/TabStrip';
+import { StatusBar } from './chrome/StatusBar';
+import { LogbookView } from './views/Logbook';
+import { EditorView } from './views/Editor';
+import { TasksView } from './views/Tasks';
+import { ConstellationView } from './views/Graph';
+import { SettingsView } from './views/Settings';
+import { Switcher } from './views/Switcher';
+import { VaultPicker } from './views/VaultPicker';
+import { NewNoteDialog } from './ui/dialogs';
+import { api } from './api';
+import { todayISO } from './store';
 
-type View = 'notes' | 'tasks' | 'tasks-kanban' | 'tasks-calendar';
-
-function App() {
-  const { vaultPath, notes, loadVault, loadNotes } = useVaultStore();
-  const { loadSettings } = useSettingsStore();
-  const settings = useSettingsStore((state) => state.settings);
-  const [selectedNote, setSelectedNote] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<View>('notes');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
-  const [peekedNote, setPeekedNote] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const { pinnedPreviews } = usePinnedPreviewsStore();
-
-  // Load settings on mount and apply theme
-  useEffect(() => {
-    const initializeTheme = async () => {
-      applyActiveThemeFromSettings({
-        appearance: { activeThemeId: getDefaultThemeDefinition().id },
-      });
-      await loadSettings();
-      const loadedSettings = useSettingsStore.getState().settings;
-      applyActiveThemeFromSettings(loadedSettings);
-      setIsInitializing(false);
-    };
-    
-    initializeTheme();
-  }, []); // Only run on mount
-
-  // Apply theme when settings change (for reactive updates)
-  useEffect(() => {
-    applyActiveThemeFromSettings(settings);
-  }, [settings]);
+export default function App() {
+  const phase = useStore((s) => s.phase);
+  const snapshot = useStore((s) => s.snapshot);
+  const view = useStore((s) => s.view);
+  const selectedPath = useStore((s) => s.selectedPath);
+  const setView = useStore((s) => s.setView);
+  const openNote = useStore((s) => s.openNote);
+  const openLogbook = useStore((s) => s.openLogbook);
+  const setSwitcherOpen = useStore((s) => s.setSwitcherOpen);
+  const switcherOpen = useStore((s) => s.switcherOpen);
+  const boot = useStore((s) => s.boot);
+  const toast = useStore((s) => s.toast);
+  const docStatus = useStore((s) => s.docStatus);
+  const [newNoteOpen, setNewNoteOpen] = useState(false);
 
   useEffect(() => {
-    if (vaultPath) {
-      loadNotes();
-    }
-  }, [vaultPath, loadNotes]);
-
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + P for Quick Switcher
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault();
-        setIsQuickSwitcherOpen(true);
-      }
-      // Ctrl/Cmd + K for Quick Switcher (alternative)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsQuickSwitcherOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    void boot();
   }, []);
 
-  // Listen for navigate-to-note events from wikilinks
+  // theme + density on the root element
   useEffect(() => {
-    const handleNavigate = (e: Event) => {
-      const customEvent = e as CustomEvent<{ path: string }>;
-      if (customEvent.detail?.path) {
-        console.log('Navigating to note:', customEvent.detail.path);
-        setSelectedNote(customEvent.detail.path);
-        setCurrentView('notes');
+    const settings = snapshot?.settings;
+    document.documentElement.setAttribute('data-theme', settings?.theme ?? 'midnight');
+    document.documentElement.setAttribute('data-density', settings?.density ?? 'regular');
+  }, [snapshot?.settings.theme, snapshot?.settings.density]);
+
+  // global keyboard shortcuts
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) {
+        if (e.key === 'Escape') setSwitcherOpen(false);
+        return;
+      }
+      const key = e.key.toLowerCase();
+      if (key === 'k' || key === 'p') {
+        e.preventDefault();
+        setSwitcherOpen(true);
+      } else if (key === 'd') {
+        e.preventDefault();
+        openLogbook();
+      } else if (key === 'g') {
+        e.preventDefault();
+        setView('graph');
+      } else if (key === 'n') {
+        e.preventDefault();
+        setNewNoteOpen(true);
+      } else if (key === 'b') {
+        e.preventDefault();
+        const s = useStore.getState().snapshot;
+        if (s) void api.setSettings({ marginOn: !s.settings.marginOn });
       }
     };
-
-    const handlePeek = (e: Event) => {
-      const customEvent = e as CustomEvent<{ path: string }>;
-      if (customEvent.detail?.path) {
-        console.log('Peeking at note:', customEvent.detail.path);
-        setPeekedNote(customEvent.detail.path);
-      }
-    };
-
-    window.addEventListener('navigate-to-note', handleNavigate);
-    window.addEventListener('peek-note', handlePeek);
-    return () => {
-      window.removeEventListener('navigate-to-note', handleNavigate);
-      window.removeEventListener('peek-note', handlePeek);
-    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, []);
 
-  // Show loading screen while initializing
-  if (isInitializing) {
-    return <LoadingScreen />;
+  if (phase === 'boot') {
+    return <div className="app" style={{ background: 'var(--bg-0)' }} />;
   }
 
-  // Show vault selector if no vault is selected
-  if (!vaultPath) {
-    return <VaultSelector onSelect={loadVault} />;
+  if (phase === 'picker' || !snapshot) {
+    return (
+      <div className="app" style={{ gridTemplateRows: '1fr' }}>
+        <VaultPicker />
+      </div>
+    );
   }
 
-  const handleSearchResultClick = (result: { type: 'note' | 'task'; path?: string; noteId?: string }) => {
-    if (result.type === 'note' && result.path) {
-      setSelectedNote(result.path);
-      setCurrentView('notes');
-    } else if (result.type === 'task' && result.noteId) {
-      // Find the note path from the note ID
-      const note = notes.find(n => n.id === result.noteId);
-      if (note) {
-        setSelectedNote(note.path);
-        setCurrentView('notes');
-      }
-    }
-  };
+  const note = snapshot.notes.find((n) => n.path === selectedPath);
+  const crumb: string[] =
+    view === 'editor'
+      ? [snapshot.vaultName, note?.folder || 'vault', note?.title ?? '']
+      : view === 'logbook'
+        ? [snapshot.vaultName, 'Daily', todayISO()]
+        : view.startsWith('tasks')
+          ? [
+              snapshot.vaultName,
+              'Tasks',
+              view === 'tasks-table' ? 'Table' : view === 'tasks-kanban' ? 'Board' : 'Calendar',
+            ]
+          : view === 'graph'
+            ? [snapshot.vaultName, 'Graph']
+            : [snapshot.vaultName, 'Settings'];
+
+  const fullBleed = view === 'settings';
 
   return (
-    <div className="flex flex-col h-screen bg-app-shell" style={{ position: 'relative', zIndex: 10 }}>
-      <ThemeBackground />
-      <AnimationLayer disabled={Boolean(selectedNote || peekedNote)} />
-      <div className="relative z-10 flex flex-col h-full">
-      <TitleBar onSettingsClick={() => setIsSettingsOpen(true)} />
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 flex flex-col bg-app-panel border-app-default">
-        <div className="flex" style={{ borderBottom: '1px solid var(--theme-border-primary)' }}>
-          <button
-            onClick={() => setCurrentView('notes')}
-            className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-              currentView === 'notes'
-                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <FiFileText />
-            Notes
-          </button>
-          <button
-            onClick={() => setCurrentView('tasks')}
-            className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-              currentView === 'tasks'
-                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <FiCheckSquare />
-            Tasks
-          </button>
-        </div>
-        {currentView === 'notes' && (
-          <NoteList
-            notes={notes}
-            selectedNote={selectedNote}
-            onSelectNote={setSelectedNote}
-          />
-        )}
-      </aside>
-      <main className="flex-1 flex flex-col">
-        {currentView === 'notes' ? (
-          selectedNote ? (
-            <NoteEditor notePath={selectedNote} onClose={() => setSelectedNote(null)} />
-          ) : (
-            <DailyNotesDashboard onSelectNote={setSelectedNote} />
-          )
-        ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="border-b border-app-default px-4 py-2 bg-app-elevated flex flex-wrap items-center justify-between gap-3">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentView('tasks')}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  Table
-                </button>
-                <button
-                  onClick={() => setCurrentView('tasks-kanban')}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  Kanban
-                </button>
-                <button
-                  onClick={() => setCurrentView('tasks-calendar')}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  Calendar
-                </button>
-              </div>
-              <div className="hidden lg:block max-w-full overflow-x-auto">
-                <QuickCapture />
-              </div>
-              <div className="hidden md:block">
-                <TaskFilters />
-              </div>
-            </div>
-            {currentView === 'tasks' ? (
-              <TaskTableView />
-            ) : currentView === 'tasks-kanban' ? (
-              <TaskKanbanView />
-            ) : (
-              <TaskCalendarView />
-            )}
+    <div className="app">
+      <TitleBar />
+
+      <div className="app-body">
+        <ActivityBar />
+        <Sidebar />
+
+        <main className="main">
+          <TabStrip />
+          <div className="breadcrumb">
+            {crumb.filter(Boolean).map((c, i, arr) => (
+              <Fragment key={i}>
+                <span className={'seg' + (i === arr.length - 1 ? ' leaf' : '')}>{c}</span>
+                {i < arr.length - 1 && <span className="sep">›</span>}
+              </Fragment>
+            ))}
           </div>
-        )}
-      </main>
+
+          <div className="view-host">
+            {view === 'editor' && selectedPath && (
+              <EditorView snapshot={snapshot} path={selectedPath} />
+            )}
+            {view === 'editor' && !selectedPath && (
+              <div className="empty-note">No note open. ⌘K to find one.</div>
+            )}
+            {view === 'logbook' && <LogbookView snapshot={snapshot} />}
+            {view.startsWith('tasks') && <TasksView snapshot={snapshot} view={view} />}
+            {view === 'graph' && <ConstellationView snapshot={snapshot} />}
+            {fullBleed && <SettingsView snapshot={snapshot} />}
+          </div>
+        </main>
       </div>
-      </div>
-      {/* Peek Panel */}
-      <AnimatePresence>
-        {peekedNote && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 w-1/2 bg-app-elevated border-l border-app-default shadow-2xl z-50 flex flex-col"
-          >
-            <div className="flex items-center justify-between p-4 border-b border-app-default bg-app-panel">
-              <h2 className="text-lg font-semibold text-primary">
-                {notes.find(n => n.path === peekedNote)?.title || 'Peek'}
-              </h2>
-              <button
-                onClick={() => setPeekedNote(null)}
-                className="px-3 py-1.5 text-sm font-medium text-secondary hover-surface rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <NoteEditor notePath={peekedNote} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Pinned Previews */}
-      <AnimatePresence>
-        {pinnedPreviews.map((preview) => (
-          <PinnedPreviewComponent key={preview.id} preview={preview} />
-        ))}
-      </AnimatePresence>
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <QuickSwitcher
-        isOpen={isQuickSwitcherOpen}
-        onClose={() => setIsQuickSwitcherOpen(false)}
-        onSelect={handleSearchResultClick}
+
+      <StatusBar
+        doc={
+          view === 'editor'
+            ? docStatus
+            : view === 'logbook'
+              ? { schema: 'Daily' }
+              : {}
+        }
       />
+
+      {switcherOpen && (
+        <Switcher snapshot={snapshot} onRequestNewNote={() => setNewNoteOpen(true)} />
+      )}
+
+      {newNoteOpen && (
+        <NewNoteDialog
+          folders={allFolderPaths(snapshot.tree)}
+          onCreate={async (title, folder, schema) => {
+            const path = await api.createNote(folder, title, schema);
+            openNote(path);
+          }}
+          onClose={() => setNewNoteOpen(false)}
+        />
+      )}
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
-
-export default App;

@@ -1,0 +1,829 @@
+import { readFile, writeFile, mkdir, rm, rename, readdir, stat } from 'node:fs/promises';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname, relative, sep } from 'node:path';
+import { watch, type FSWatcher } from 'chokidar';
+import { parseFrontmatter, serializeFrontmatter } from '../src-shared/frontmatter';
+import { extractTasks, updateTaskLine, formatTaskLine, taskId, type TaskEdits } from '../src-shared/tasks';
+import {
+  extractWikilinkTargets,
+  countWikilinks,
+  renameWikilinks,
+  snippetAround,
+} from '../src-shared/wikilinks';
+import {
+  inferSchema,
+  noteTitle,
+  titleFromPath,
+  topFolder,
+  extractHeadings,
+  excerptOf,
+  countWords,
+  localISO,
+  safeFileName,
+} from '../src-shared/notes';
+import { layoutGraph } from './layout';
+import type {
+  ActivityEvent,
+  BacklinkRef,
+  FolderNode,
+  GraphData,
+  NoteMeta,
+  NotePayload,
+  TaskItem,
+  VaultSettings,
+  VaultSnapshot,
+  VaultStats,
+  SchemaName,
+} from '../src-shared/types';
+import { DEFAULT_SETTINGS } from '../src-shared/types';
+
+interface NoteRecord {
+  path: string;
+  raw: string;
+  body: string;
+  bodyStartLine: number;
+  frontmatter: Record<string, unknown>;
+  title: string;
+  folder: string;
+  schema: SchemaName;
+  tags: string[];
+  linkTargets: string[];
+  headings: NoteMeta['headings'];
+  excerpt: string;
+  wordCount: number;
+  wikilinkCount: number;
+  created: number;
+  updated: number;
+}
+
+const SKALD_DIR = '.skald';
+const ACTIVITY_CAP = 300;
+
+export class Vault {
+  readonly path: string;
+  private notes = new Map<string, NoteRecord>();
+  private folders = new Set<string>();
+  private watcher: FSWatcher | null = null;
+  private settings: VaultSettings = { ...DEFAULT_SETTINGS };
+  private activity: ActivityEvent[] = [];
+  private positions: Record<string, { x: number; y: number }> = {};
+  private selfWrites = new Map<string, number>();
+  private broadcast: () => void;
+  private broadcastTimer: NodeJS.Timeout | null = null;
+
+  constructor(vaultPath: string, onChange: (snapshot: VaultSnapshot) => void) {
+    this.path = vaultPath;
+    this.broadcast = () => {
+      if (this.broadcastTimer) clearTimeout(this.broadcastTimer);
+      this.broadcastTimer = setTimeout(() => onChange(this.snapshot()), 120);
+    };
+  }
+
+  // ---------- lifecycle ----------
+
+  async open(): Promise<void> {
+    await mkdir(this.path, { recursive: true });
+    await mkdir(join(this.path, SKALD_DIR), { recursive: true });
+    this.loadState();
+    await this.scan();
+    this.ensurePositions();
+
+    this.watcher = watch(this.path, {
+      ignored: (p: string) => {
+        const rel = relative(this.path, p);
+        if (!rel) return false;
+        return rel.split(sep).some((seg) => seg.startsWith('.') || seg === 'node_modules');
+      },
+      persistent: true,
+      ignoreInitial: true,
+      awaitWriteFinish: { stabilityThreshold: 250, pollInterval: 80 },
+    });
+    this.watcher.on('add', (p) => this.onFsEvent('add', p));
+    this.watcher.on('change', (p) => this.onFsEvent('change', p));
+    this.watcher.on('unlink', (p) => this.onFsEvent('unlink', p));
+    this.watcher.on('addDir', (p) => this.onFsEvent('addDir', p));
+    this.watcher.on('unlinkDir', (p) => this.onFsEvent('unlinkDir', p));
+  }
+
+  async close(): Promise<void> {
+    await this.watcher?.close();
+    this.watcher = null;
+    if (this.broadcastTimer) clearTimeout(this.broadcastTimer);
+  }
+
+  /** Seed a brand-new vault with a small real starter structure. */
+  async seed(): Promise<void> {
+    const today = localISO(new Date());
+    const welcome = [
+      '---',
+      'schema: Note',
+      `created: ${today}`,
+      'tags: [welcome]',
+      '---',
+      '',
+      'Welcome to your vault. Skald keeps everything as plain Markdown files in this folder — you own the data.',
+      '',
+      '## How Skald thinks',
+      '',
+      'Every note has a schema (`Note`, `Project`, `Person`, `Daily`, `Idea`, `Source`, `Code`) drawn as a small rune wherever the note appears. Link notes with wikilinks like [[' + today + ']].',
+      '',
+      '## Threads',
+      '',
+      'Any checkbox you write becomes a thread in the Tasks views, and stays in sync both ways:',
+      '',
+      '- [ ] Write your first note @p(high)',
+      `- [ ] Link two notes together @due(${today})`,
+      '- [x] Open Skald',
+      '',
+      'Press `⌘K` to search everything, `⌘D` for today, `⌘G` for the graph.',
+      '',
+    ].join('\n');
+
+    const daily = [
+      '---',
+      'schema: Daily',
+      `created: ${today}`,
+      '---',
+      '',
+      `The first page of the saga. Started the vault with [[Welcome to Skald]].`,
+      '',
+      '- [ ] Wander around the app',
+      '',
+    ].join('\n');
+
+    await mkdir(join(this.path, this.settings.dailyFolder), { recursive: true });
+    this.folders.add(this.settings.dailyFolder);
+    const dailyPath = `${this.settings.dailyFolder}/${today}.md`;
+    for (const [path, content] of [
+      ['Welcome to Skald.md', welcome],
+      [dailyPath, daily],
+    ] as const) {
+      this.markSelfWrite(path);
+      await writeFile(this.full(path), content, 'utf-8');
+      this.indexContent(path, content, Date.now(), Date.now());
+    }
+    this.ensurePositions();
+    this.recordActivity({ kind: 'note', verb: 'created', title: 'Welcome to Skald', ref: 'vault', ts: Date.now() });
+    this.broadcast();
+  }
+
+  // ---------- persistence of .skald state ----------
+
+  private stateFile(name: string): string {
+    return join(this.path, SKALD_DIR, name);
+  }
+
+  private loadState(): void {
+    this.settings = { ...DEFAULT_SETTINGS, ...readJson(this.stateFile('settings.json'), {}) };
+    this.activity = readJson<ActivityEvent[]>(this.stateFile('activity.json'), []);
+    this.positions = readJson(this.stateFile('graph.json'), {});
+  }
+
+  private saveSettings(): void {
+    writeJson(this.stateFile('settings.json'), this.settings);
+  }
+
+  private saveActivity(): void {
+    writeJson(this.stateFile('activity.json'), this.activity.slice(0, ACTIVITY_CAP));
+  }
+
+  private savePositions(): void {
+    writeJson(this.stateFile('graph.json'), this.positions);
+  }
+
+  // ---------- scanning / indexing ----------
+
+  private async scan(): Promise<void> {
+    this.notes.clear();
+    this.folders.clear();
+    await this.scanDir(this.path);
+  }
+
+  private async scanDir(dir: string): Promise<void> {
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        this.folders.add(this.rel(full));
+        await this.scanDir(full);
+      } else if (entry.isFile() && /\.md$/i.test(entry.name)) {
+        await this.indexFile(full);
+      }
+    }
+  }
+
+  private rel(full: string): string {
+    return relative(this.path, full).split(sep).join('/');
+  }
+
+  private async indexFile(full: string): Promise<void> {
+    const path = this.rel(full);
+    try {
+      const [raw, st] = await Promise.all([readFile(full, 'utf-8'), stat(full)]);
+      this.indexContent(path, raw, st.birthtimeMs || st.mtimeMs, st.mtimeMs);
+    } catch (err) {
+      console.error(`skald: failed to index ${path}`, err);
+    }
+  }
+
+  private indexContent(path: string, raw: string, created: number, updated: number): void {
+    const { frontmatter, body, bodyStartLine } = parseFrontmatter(raw);
+    const title = noteTitle(frontmatter, path);
+    const folder = topFolder(path);
+    const fmCreated = frontmatter['created'];
+    const createdTs =
+      typeof fmCreated === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fmCreated)
+        ? new Date(fmCreated).getTime()
+        : created;
+    const tags = Array.isArray(frontmatter['tags'])
+      ? (frontmatter['tags'] as unknown[]).map(String)
+      : [];
+    this.notes.set(path, {
+      path,
+      raw,
+      body,
+      bodyStartLine,
+      frontmatter,
+      title,
+      folder,
+      schema: inferSchema(frontmatter, title, folder),
+      tags,
+      linkTargets: extractWikilinkTargets(body),
+      headings: extractHeadings(body, bodyStartLine),
+      excerpt: excerptOf(body),
+      wordCount: countWords(body),
+      wikilinkCount: countWikilinks(body),
+      created: createdTs,
+      updated,
+    });
+  }
+
+  private onFsEvent(kind: string, full: string): void {
+    const path = this.rel(full);
+    if (kind === 'addDir') {
+      this.folders.add(path);
+      this.broadcast();
+      return;
+    }
+    if (kind === 'unlinkDir') {
+      this.folders.delete(path);
+      for (const p of [...this.notes.keys()]) {
+        if (p.startsWith(path + '/')) this.notes.delete(p);
+      }
+      this.broadcast();
+      return;
+    }
+    if (!/\.md$/i.test(path)) return;
+    if (kind === 'unlink') {
+      this.notes.delete(path);
+      this.broadcast();
+      return;
+    }
+    const isSelf = (this.selfWrites.get(path) ?? 0) > Date.now() - 2500;
+    this.indexFile(full).then(() => {
+      if (!isSelf && kind === 'change') {
+        const rec = this.notes.get(path);
+        if (rec) {
+          this.recordActivity({
+            kind: 'note',
+            verb: 'edited',
+            title: rec.title,
+            ref: rec.folder || 'vault',
+            ts: Date.now(),
+          });
+        }
+      }
+      this.ensurePositions();
+      this.broadcast();
+    });
+  }
+
+  // ---------- resolution ----------
+
+  /** Map lowercase title AND lowercase path-stem to path. */
+  private titleIndex(): Map<string, string> {
+    const idx = new Map<string, string>();
+    for (const rec of this.notes.values()) {
+      idx.set(rec.title.toLowerCase(), rec.path);
+      const stem = titleFromPath(rec.path).toLowerCase();
+      if (!idx.has(stem)) idx.set(stem, rec.path);
+    }
+    return idx;
+  }
+
+  resolveTarget(name: string): string | null {
+    return this.titleIndex().get(name.trim().toLowerCase()) ?? null;
+  }
+
+  // ---------- snapshot ----------
+
+  snapshot(): VaultSnapshot {
+    const idx = this.titleIndex();
+    const notes: NoteMeta[] = [];
+    const tasks: TaskItem[] = [];
+    const edgeSet = new Set<string>();
+    const edges: [string, string][] = [];
+    const linkedInto = new Set<string>();
+    let wikilinksTotal = 0;
+    let resolvedTotal = 0;
+
+    for (const rec of this.notes.values()) {
+      const links: string[] = [];
+      const unresolved: string[] = [];
+      for (const target of rec.linkTargets) {
+        const hit = idx.get(target.toLowerCase());
+        if (hit && hit !== rec.path) {
+          links.push(hit);
+          linkedInto.add(hit);
+          const key = [rec.path, hit].sort().join(' ');
+          if (!edgeSet.has(key)) {
+            edgeSet.add(key);
+            edges.push([rec.path, hit]);
+          }
+        } else if (!hit) {
+          unresolved.push(target);
+        }
+      }
+      wikilinksTotal += rec.wikilinkCount;
+      resolvedTotal += links.length;
+
+      const rawTasks = extractTasks(rec.body, rec.bodyStartLine);
+      for (const t of rawTasks) {
+        tasks.push({
+          id: taskId(rec.path, t.line),
+          notePath: rec.path,
+          noteTitle: rec.title,
+          line: t.line,
+          content: t.content,
+          status: t.status,
+          priority: t.priority,
+          due: t.due,
+          tags: t.tags,
+        });
+      }
+
+      notes.push({
+        path: rec.path,
+        title: rec.title,
+        folder: rec.folder,
+        schema: rec.schema,
+        tags: rec.tags,
+        frontmatter: rec.frontmatter,
+        links,
+        unresolved,
+        headings: rec.headings,
+        excerpt: rec.excerpt,
+        wordCount: rec.wordCount,
+        taskCount: rawTasks.length,
+        openTaskCount: rawTasks.filter((t) => t.status !== 'done').length,
+        created: rec.created,
+        updated: rec.updated,
+      });
+    }
+
+    notes.sort((a, b) => a.path.localeCompare(b.path));
+    tasks.sort((a, b) => (a.due ?? '9999').localeCompare(b.due ?? '9999') || a.id.localeCompare(b.id));
+
+    const today = localISO(new Date());
+    const degree = new Map<string, number>();
+    for (const [a, b] of edges) {
+      degree.set(a, (degree.get(a) ?? 0) + 1);
+      degree.set(b, (degree.get(b) ?? 0) + 1);
+    }
+
+    const graph: GraphData = {
+      nodes: notes.map((n) => ({
+        path: n.path,
+        label: n.title,
+        schema: n.schema,
+        folder: n.folder,
+        deg: degree.get(n.path) ?? 0,
+        x: this.positions[n.path]?.x ?? 0.5,
+        y: this.positions[n.path]?.y ?? 0.5,
+        updated: n.updated,
+      })),
+      edges,
+    };
+
+    const stats: VaultStats = {
+      notes: notes.length,
+      folders: this.folders.size,
+      tasksOpen: tasks.filter((t) => t.status !== 'done').length,
+      tasksTotal: tasks.length,
+      overdue: tasks.filter((t) => t.due && t.due < today && t.status !== 'done').length,
+      wikilinks: wikilinksTotal,
+      resolved: resolvedTotal,
+      orphans: notes.filter((n) => n.links.length === 0 && !linkedInto.has(n.path)).length,
+    };
+
+    return {
+      vaultPath: this.path,
+      vaultName: this.path.split(sep).pop() || this.path,
+      tree: this.buildTree(notes),
+      notes,
+      tasks,
+      stats,
+      graph,
+      activity: this.activity.slice(0, 60),
+      settings: this.settings,
+    };
+  }
+
+  private buildTree(notes: NoteMeta[]): FolderNode {
+    const root: FolderNode = { name: '', path: '', folders: [], notes: [] };
+    const dirIndex = new Map<string, FolderNode>([['', root]]);
+    const ensureDir = (path: string): FolderNode => {
+      const existing = dirIndex.get(path);
+      if (existing) return existing;
+      const parentPath = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+      const parent = ensureDir(parentPath);
+      const node: FolderNode = {
+        name: path.split('/').pop() || path,
+        path,
+        folders: [],
+        notes: [],
+      };
+      parent.folders.push(node);
+      dirIndex.set(path, node);
+      return node;
+    };
+    for (const folder of [...this.folders].sort()) ensureDir(folder);
+    for (const note of notes) {
+      const dir = note.path.includes('/')
+        ? note.path.slice(0, note.path.lastIndexOf('/'))
+        : '';
+      ensureDir(dir).notes.push(note.path);
+    }
+    const sortNode = (n: FolderNode) => {
+      n.folders.sort((a, b) => a.name.localeCompare(b.name));
+      n.folders.forEach(sortNode);
+    };
+    sortNode(root);
+    return root;
+  }
+
+  private ensurePositions(): void {
+    const ids = [...this.notes.keys()];
+    const missing = ids.some((id) => !this.positions[id]);
+    if (!missing) return;
+    const idx = this.titleIndex();
+    const edges: [string, string][] = [];
+    for (const rec of this.notes.values()) {
+      for (const t of rec.linkTargets) {
+        const hit = idx.get(t.toLowerCase());
+        if (hit && hit !== rec.path) edges.push([rec.path, hit]);
+      }
+    }
+    this.positions = { ...this.positions, ...layoutGraph(ids, edges, this.positions) };
+    this.savePositions();
+  }
+
+  // ---------- note operations ----------
+
+  readNote(path: string): NotePayload {
+    const rec = this.notes.get(path);
+    if (!rec) throw new Error(`Note not found: ${path}`);
+    const meta = this.snapshotMetaFor(path);
+    return {
+      meta,
+      content: rec.raw,
+      body: rec.body,
+      bodyStartLine: rec.bodyStartLine,
+      backlinks: this.backlinksFor(rec),
+    };
+  }
+
+  private snapshotMetaFor(path: string): NoteMeta {
+    const snap = this.snapshot();
+    const meta = snap.notes.find((n) => n.path === path);
+    if (!meta) throw new Error(`Note not found: ${path}`);
+    return meta;
+  }
+
+  private backlinksFor(rec: NoteRecord): BacklinkRef[] {
+    const out: BacklinkRef[] = [];
+    const names = new Set([rec.title.toLowerCase(), titleFromPath(rec.path).toLowerCase()]);
+    for (const other of this.notes.values()) {
+      if (other.path === rec.path) continue;
+      const hit = other.linkTargets.find((t) => names.has(t.toLowerCase()));
+      if (!hit) continue;
+      out.push({
+        path: other.path,
+        title: other.title,
+        schema: other.schema,
+        folder: other.folder || 'vault',
+        snippet: snippetAround(other.body, hit),
+        updated: other.updated,
+      });
+    }
+    out.sort((a, b) => b.updated - a.updated);
+    return out;
+  }
+
+  private full(path: string): string {
+    const full = join(this.path, path);
+    const normalized = full.split(sep).join('/');
+    const base = this.path.split(sep).join('/');
+    if (normalized !== base && !normalized.startsWith(base + '/')) {
+      throw new Error(`Path escapes vault: ${path}`);
+    }
+    return full;
+  }
+
+  private markSelfWrite(path: string): void {
+    this.selfWrites.set(path, Date.now());
+    if (this.selfWrites.size > 200) {
+      const cutoff = Date.now() - 10_000;
+      for (const [k, v] of this.selfWrites) if (v < cutoff) this.selfWrites.delete(k);
+    }
+  }
+
+  async writeNote(path: string, content: string, opts: { silent?: boolean } = {}): Promise<void> {
+    const full = this.full(path);
+    this.markSelfWrite(path);
+    await mkdir(dirname(full), { recursive: true });
+    await writeFile(full, content, 'utf-8');
+    const prev = this.notes.get(path);
+    this.indexContent(path, content, prev?.created ?? Date.now(), Date.now());
+    if (!opts.silent) {
+      const rec = this.notes.get(path)!;
+      this.recordActivity({
+        kind: 'note',
+        verb: prev ? 'edited' : 'created',
+        title: rec.title,
+        ref: rec.folder || 'vault',
+        ts: Date.now(),
+      });
+    }
+    this.ensurePositions();
+    this.broadcast();
+  }
+
+  async createNote(folder: string, title: string, schema: SchemaName): Promise<string> {
+    const name = safeFileName(title) || 'Untitled';
+    const dir = folder ? folder.replace(/^\/+|\/+$/g, '') : '';
+    let path = dir ? `${dir}/${name}.md` : `${name}.md`;
+    let n = 2;
+    while (this.notes.has(path) || existsSync(this.full(path))) {
+      path = dir ? `${dir}/${name} ${n}.md` : `${name} ${n}.md`;
+      n++;
+    }
+    const fm: Record<string, unknown> = {
+      schema,
+      created: localISO(new Date()),
+    };
+    const content = serializeFrontmatter(fm, '');
+    this.markSelfWrite(path);
+    const full = this.full(path);
+    await mkdir(dirname(full), { recursive: true });
+    await writeFile(full, content, 'utf-8');
+    this.indexContent(path, content, Date.now(), Date.now());
+    this.recordActivity({
+      kind: 'note',
+      verb: 'created',
+      title: titleFromPath(path),
+      ref: dir || 'vault',
+      ts: Date.now(),
+    });
+    this.ensurePositions();
+    this.broadcast();
+    return path;
+  }
+
+  async createDailyNote(): Promise<string> {
+    const today = localISO(new Date());
+    const dir = this.settings.dailyFolder;
+    const path = `${dir}/${today}.md`;
+    if (this.notes.has(path)) return path;
+    const content = serializeFrontmatter({ schema: 'Daily', created: today }, '');
+    this.markSelfWrite(path);
+    const full = this.full(path);
+    await mkdir(dirname(full), { recursive: true });
+    await writeFile(full, content, 'utf-8');
+    this.indexContent(path, content, Date.now(), Date.now());
+    this.recordActivity({ kind: 'note', verb: 'created', title: today, ref: dir, ts: Date.now() });
+    this.ensurePositions();
+    this.broadcast();
+    return path;
+  }
+
+  async renameNote(path: string, newTitle: string): Promise<string> {
+    const rec = this.notes.get(path);
+    if (!rec) throw new Error(`Note not found: ${path}`);
+    const oldTitle = rec.title;
+    const oldStem = titleFromPath(path);
+    const name = safeFileName(newTitle);
+    if (!name) throw new Error('Empty name');
+    const dir = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+    const newPath = dir ? `${dir}/${name}.md` : `${name}.md`;
+    if (newPath === path) return path;
+    if (this.notes.has(newPath) || existsSync(this.full(newPath))) {
+      throw new Error(`A note named “${name}” already exists there.`);
+    }
+
+    // Update wikilinks across the vault that pointed at the old title/stem.
+    for (const other of this.notes.values()) {
+      if (other.path === path) continue;
+      const touched =
+        other.linkTargets.some((t) => t.toLowerCase() === oldTitle.toLowerCase()) ||
+        other.linkTargets.some((t) => t.toLowerCase() === oldStem.toLowerCase());
+      if (!touched) continue;
+      let raw = other.raw;
+      raw = renameWikilinks(raw, oldTitle, name);
+      if (oldStem.toLowerCase() !== oldTitle.toLowerCase()) {
+        raw = renameWikilinks(raw, oldStem, name);
+      }
+      await this.writeNote(other.path, raw, { silent: true });
+    }
+
+    // If frontmatter pinned an old title, update it.
+    let raw = rec.raw;
+    if (typeof rec.frontmatter['title'] === 'string') {
+      const { frontmatter, body } = parseFrontmatter(raw);
+      frontmatter['title'] = name;
+      raw = serializeFrontmatter(frontmatter, body);
+    }
+
+    this.markSelfWrite(path);
+    this.markSelfWrite(newPath);
+    await mkdir(dirname(this.full(newPath)), { recursive: true });
+    await rename(this.full(path), this.full(newPath));
+    await writeFile(this.full(newPath), raw, 'utf-8');
+    this.notes.delete(path);
+    this.indexContent(newPath, raw, rec.created, Date.now());
+    if (this.positions[path]) {
+      this.positions[newPath] = this.positions[path];
+      delete this.positions[path];
+      this.savePositions();
+    }
+    if (this.settings.pinnedNote === path) {
+      this.settings.pinnedNote = newPath;
+      this.saveSettings();
+    }
+    this.recordActivity({
+      kind: 'note',
+      verb: 'renamed',
+      title: `${oldTitle} → ${name}`,
+      ref: dir || 'vault',
+      ts: Date.now(),
+    });
+    this.broadcast();
+    return newPath;
+  }
+
+  async deleteNote(path: string): Promise<void> {
+    const rec = this.notes.get(path);
+    this.markSelfWrite(path);
+    try {
+      await rm(this.full(path));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    }
+    this.notes.delete(path);
+    delete this.positions[path];
+    this.savePositions();
+    if (this.settings.pinnedNote === path) {
+      this.settings.pinnedNote = null;
+      this.saveSettings();
+    }
+    if (rec) {
+      this.recordActivity({
+        kind: 'note',
+        verb: 'deleted',
+        title: rec.title,
+        ref: rec.folder || 'vault',
+        ts: Date.now(),
+      });
+    }
+    this.broadcast();
+  }
+
+  async createFolder(folderPath: string): Promise<void> {
+    const clean = folderPath.replace(/^\/+|\/+$/g, '');
+    if (!clean) return;
+    await mkdir(this.full(clean), { recursive: true });
+    this.folders.add(clean);
+    this.broadcast();
+  }
+
+  // ---------- tasks ----------
+
+  async updateTask(id: string, edits: TaskEdits): Promise<void> {
+    const m = id.match(/^(.*)#L(\d+)$/);
+    if (!m) throw new Error(`Bad task id: ${id}`);
+    const [, path, lineStr] = m;
+    const rec = this.notes.get(path);
+    if (!rec) throw new Error(`Note not found: ${path}`);
+    const line = parseInt(lineStr, 10);
+    const before = extractTasks(rec.body, rec.bodyStartLine).find((t) => t.line === line);
+    const updated = updateTaskLine(rec.raw, line, edits);
+    if (updated === rec.raw) return;
+    await this.writeNote(path, updated, { silent: true });
+
+    if (edits.status && edits.status !== before?.status) {
+      const verb =
+        edits.status === 'done'
+          ? 'completed'
+          : edits.status === 'blocked'
+            ? 'blocked'
+            : edits.status === 'working'
+              ? 'started'
+              : 'reopened';
+      this.recordActivity({
+        kind: 'task',
+        verb,
+        title: edits.content ?? before?.content ?? 'task',
+        ref: rec.title,
+        ts: Date.now(),
+      });
+      this.broadcast();
+    }
+  }
+
+  async addTask(
+    notePath: string,
+    content: string,
+    opts: { due?: string | null; priority?: 'low' | 'med' | 'high' } = {}
+  ): Promise<void> {
+    const rec = this.notes.get(notePath);
+    if (!rec) throw new Error(`Note not found: ${notePath}`);
+    const line = formatTaskLine(content, opts);
+    const raw = rec.raw.replace(/\n*$/, '\n') + line + '\n';
+    await this.writeNote(notePath, raw, { silent: true });
+    this.recordActivity({ kind: 'task', verb: 'added', title: content, ref: rec.title, ts: Date.now() });
+    this.broadcast();
+  }
+
+  // ---------- settings / graph / activity ----------
+
+  getSettings(): VaultSettings {
+    return this.settings;
+  }
+
+  setSettings(patch: Partial<VaultSettings>): VaultSettings {
+    this.settings = { ...this.settings, ...patch };
+    this.saveSettings();
+    this.broadcast();
+    return this.settings;
+  }
+
+  setGraphPosition(path: string, x: number, y: number): void {
+    this.positions[path] = {
+      x: Math.max(0.02, Math.min(0.98, x)),
+      y: Math.max(0.02, Math.min(0.98, y)),
+    };
+    this.savePositions();
+    this.broadcast();
+  }
+
+  resetGraphLayout(): void {
+    this.positions = {};
+    this.ensurePositions();
+    this.broadcast();
+  }
+
+  private recordActivity(ev: ActivityEvent): void {
+    // Collapse repeated identical events (e.g. autosave "edited" bursts).
+    const head = this.activity[0];
+    if (
+      head &&
+      head.kind === ev.kind &&
+      head.verb === ev.verb &&
+      head.title === ev.title &&
+      head.ref === ev.ref &&
+      ev.ts - head.ts < 10 * 60_000
+    ) {
+      head.ts = ev.ts;
+      this.saveActivity();
+      return;
+    }
+    this.activity.unshift(ev);
+    if (this.activity.length > ACTIVITY_CAP) this.activity.length = ACTIVITY_CAP;
+    this.saveActivity();
+  }
+}
+
+// ---------- small fs helpers ----------
+
+function readJson<T>(file: string, fallback: T): T {
+  try {
+    return JSON.parse(readFileSync(file, 'utf-8')) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(file: string, value: unknown): void {
+  try {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(value, null, 2), 'utf-8');
+  } catch (err) {
+    console.error(`skald: failed to write ${file}`, err);
+  }
+}

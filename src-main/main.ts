@@ -1,334 +1,154 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { initializeDatabase, getAllSchemas, insertSchema, getSchema, updateSchema, deleteSchema, getLastVaultPath, setLastVaultPath, getKanbanSettings, setKanbanSettings, getAllSettings, getSettings, setSettings, updateSettings, Settings, getBacklinks } from './db/index.js';
-import { getAllTasks, getTasksByNote, updateTask, deleteTask, getTask, reorderTasksByStatus, Task } from './db/tasks.js';
-import { VaultManager } from './vault/manager.js';
-import { defaultSchemas } from './schemas/defaultSchemas.js';
-import { serializeZodSchema } from './db/schemas.js';
-import { syncTaskToNote } from './tasks/sync.js';
-import { getAllDocuments } from './search/indexer.js';
-import { parseQuery, searchDocuments } from './search/query.js';
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { Vault } from './vault';
+import { loadAppConfig, saveAppConfig } from './config';
+import type { VaultSettings } from '../src-shared/types';
+import type { TaskEdits } from '../src-shared/tasks';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let mainWindow: BrowserWindow | null = null;
-let vaultManager: VaultManager | null = null;
+let vault: Vault | null = null;
 
 function createWindow() {
+  const cfg = loadAppConfig();
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    width: cfg.windowBounds?.width ?? 1440,
+    height: cfg.windowBounds?.height ?? 920,
+    minWidth: 960,
+    minHeight: 600,
     frame: false,
-    titleBarStyle: 'hidden',
+    backgroundColor: '#0a0c10',
     webPreferences: {
       preload: join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      // sandbox: true breaks ipcRenderer.invoke in CJS preloads on Electron 31 dev mode.
-      // contextIsolation + !nodeIntegration provides the same renderer isolation guarantee.
       sandbox: false,
     },
   });
 
-  // Check if we're in development mode (app.isPackaged is false when running from source)
   if (!app.isPackaged) {
-    // Development: load from Vite dev server
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    // Production: load from built files
     mainWindow.loadFile(join(__dirname, '../dist/index.html'));
   }
+
+  mainWindow.on('maximize', () => mainWindow?.webContents.send('window:maximized', true));
+  mainWindow.on('unmaximize', () => mainWindow?.webContents.send('window:maximized', false));
+  mainWindow.on('resize', () => {
+    if (!mainWindow || mainWindow.isMaximized()) return;
+    const [width, height] = mainWindow.getSize();
+    saveAppConfig({ windowBounds: { width, height } });
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 
-app.whenReady().then(async () => {
-  await initializeDatabase();
-  await initializeDefaultSchemas();
-  createWindow();
-  
-  // Set up window event listeners after window is created
-  if (mainWindow) {
-    mainWindow.on('maximize', () => {
-      mainWindow?.webContents.send('window-maximized');
-    });
-    mainWindow.on('unmaximize', () => {
-      mainWindow?.webContents.send('window-unmaximized');
-    });
+async function openVault(path: string, seedIfEmpty = false): Promise<unknown> {
+  await vault?.close();
+  vault = new Vault(path, (snapshot) => {
+    mainWindow?.webContents.send('vault:changed', snapshot);
+  });
+  await vault.open();
+  if (seedIfEmpty && vault.snapshot().notes.length === 0) {
+    await vault.seed();
   }
+  saveAppConfig({ lastVault: path });
+  return vault.snapshot();
+}
 
+function requireVault(): Vault {
+  if (!vault) throw new Error('No vault open');
+  return vault;
+}
+
+app.whenReady().then(() => {
+  registerIpc();
+  createWindow();
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
 
-// IPC Handlers
-ipcMain.handle('vault:select', async () => {
-  const result = await dialog.showOpenDialog(mainWindow!, {
-    properties: ['openDirectory'],
+app.on('before-quit', async () => {
+  await vault?.close();
+});
+
+function registerIpc() {
+  // ----- vault lifecycle -----
+  ipcMain.handle('vault:getLast', () => {
+    const last = loadAppConfig().lastVault;
+    return last && existsSync(last) ? last : null;
   });
-  if (!result.canceled && result.filePaths.length > 0) {
-    vaultManager = new VaultManager(result.filePaths[0]);
-    await vaultManager.initialize();
-    setLastVaultPath(result.filePaths[0]);
-    return result.filePaths[0];
-  }
-  return null;
-});
 
-ipcMain.handle('vault:getLastPath', () => {
-  return getLastVaultPath() || null;
-});
+  ipcMain.handle('vault:selectDialog', async () => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Open vault folder',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    return result.canceled ? null : result.filePaths[0];
+  });
 
-ipcMain.handle('vault:openPath', async (_event, path: string) => {
-  if (!path) return null;
-  vaultManager = new VaultManager(path);
-  await vaultManager.initialize();
-  setLastVaultPath(path);
-  return path;
-});
-ipcMain.handle('vault:getPath', () => {
-  return vaultManager?.getPath() || null;
-});
+  ipcMain.handle('vault:open', (_e, path: string) => openVault(path, false));
+  ipcMain.handle('vault:create', (_e, path: string) => openVault(path, true));
+  ipcMain.handle('vault:snapshot', () => requireVault().snapshot());
+  ipcMain.handle('vault:revealInFolder', (_e, sub?: string) => {
+    const v = requireVault();
+    shell.openPath(sub ? join(v.path, sub) : v.path);
+  });
 
-ipcMain.handle('vault:listNotes', async () => {
-  if (!vaultManager) return [];
-  return await vaultManager.listNotes();
-});
+  // ----- notes -----
+  ipcMain.handle('note:read', (_e, path: string) => requireVault().readNote(path));
+  ipcMain.handle('note:write', (_e, path: string, content: string) =>
+    requireVault().writeNote(path, content)
+  );
+  ipcMain.handle('note:create', (_e, folder: string, title: string, schema: string) =>
+    requireVault().createNote(folder, title, schema as never)
+  );
+  ipcMain.handle('note:createDaily', () => requireVault().createDailyNote());
+  ipcMain.handle('note:rename', (_e, path: string, newTitle: string) =>
+    requireVault().renameNote(path, newTitle)
+  );
+  ipcMain.handle('note:delete', (_e, path: string) => requireVault().deleteNote(path));
+  ipcMain.handle('folder:create', (_e, path: string) => requireVault().createFolder(path));
 
-ipcMain.handle('vault:readFile', async (_event, path: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.readFile(path);
-});
+  // ----- tasks -----
+  ipcMain.handle('task:update', (_e, id: string, edits: TaskEdits) =>
+    requireVault().updateTask(id, edits)
+  );
+  ipcMain.handle(
+    'task:add',
+    (_e, notePath: string, content: string, opts?: { due?: string | null; priority?: 'low' | 'med' | 'high' }) =>
+      requireVault().addTask(notePath, content, opts ?? {})
+  );
 
-ipcMain.handle('vault:writeFile', async (_event, path: string, content: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.writeFile(path, content);
-});
+  // ----- settings / graph -----
+  ipcMain.handle('settings:set', (_e, patch: Partial<VaultSettings>) =>
+    requireVault().setSettings(patch)
+  );
+  ipcMain.handle('graph:setPosition', (_e, path: string, x: number, y: number) =>
+    requireVault().setGraphPosition(path, x, y)
+  );
+  ipcMain.handle('graph:resetLayout', () => requireVault().resetGraphLayout());
 
-ipcMain.handle('vault:createNote', async (_event, path: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.createNote(path);
-});
-
-ipcMain.handle('vault:createFolder', async (_event, folderPath: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.createFolder(folderPath);
-});
-
-ipcMain.handle('vault:listFolders', async () => {
-  if (!vaultManager) return [];
-  return await vaultManager.listFolders();
-});
-
-ipcMain.handle('vault:moveNote', async (_event, oldPath: string, newPath: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.moveNote(oldPath, newPath);
-});
-
-// Refactoring IPC handlers
-ipcMain.handle('refactor:renameNote', async (_event, oldPath: string, newName: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  const { renameNote } = await import('./vault/refactor.js');
-  return await renameNote(vaultManager, oldPath, newName);
-});
-
-ipcMain.handle('refactor:moveNote', async (_event, oldPath: string, newPath: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  const { moveNoteWithWikilinkUpdate } = await import('./vault/refactor.js');
-  return await moveNoteWithWikilinkUpdate(vaultManager, oldPath, newPath);
-});
-
-ipcMain.handle('refactor:extractSelection', async (_event, sourcePath: string, selection: string, newNoteName: string, startOffset: number, endOffset: number) => {
-  if (!vaultManager) throw new Error('No vault open');
-  const { extractSelectionToNote } = await import('./vault/refactor.js');
-  return await extractSelectionToNote(vaultManager, sourcePath, selection, newNoteName, startOffset, endOffset);
-});
-
-ipcMain.handle('vault:moveFolder', async (_event, oldPath: string, newPath: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.moveFolder(oldPath, newPath);
-});
-
-ipcMain.handle('vault:deleteNote', async (_event, path: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.deleteNote(path);
-});
-
-ipcMain.handle('vault:deleteFolder', async (_event, folderPath: string) => {
-  if (!vaultManager) throw new Error('No vault open');
-  return await vaultManager.deleteFolder(folderPath);
-});
-
-// Schema IPC handlers
-ipcMain.handle('schema:list', async () => {
-  return await getAllSchemas();
-});
-
-ipcMain.handle('schema:get', async (_event, id: string) => {
-  return await getSchema(id);
-});
-
-ipcMain.handle('schema:create', async (_event, name: string, zodJson: string) => {
-  return await insertSchema({ name, zodJson });
-});
-
-ipcMain.handle('schema:update', async (_event, id: string, updates: { name?: string; zodJson?: string }) => {
-  return await updateSchema(id, updates);
-});
-
-ipcMain.handle('schema:delete', async (_event, id: string) => {
-  return await deleteSchema(id);
-});
-
-// Task IPC handlers
-ipcMain.handle('task:list', async (_event, filters?: { status?: string; noteId?: string; assignedTo?: string; labels?: string[] }) => {
-  const typedFilters = filters ? {
-    ...filters,
-    status: filters.status as 'open' | 'in-progress' | 'done' | 'cancelled' | undefined,
-  } : undefined;
-  return await getAllTasks(typedFilters);
-});
-
-ipcMain.handle('task:getByNote', async (_event, noteId: string) => {
-  return await getTasksByNote(noteId);
-});
-
-type TaskUpdates = Partial<Pick<Task, 'status' | 'content' | 'priority' | 'dueDate' | 'assignedTo' | 'labels' | 'order'>>;
-
-ipcMain.handle('task:update', async (_event, id: string, updates: TaskUpdates) => {
-  // Get the task to find the note ID and line anchor
-  const task = await getTask(id);
-  if (!task) {
-    throw new Error(`Task ${id} not found`);
-  }
-
-  // Update in database
-  await updateTask(id, updates);
-
-  // If status or content changed, sync back to note file
-  if (updates.status || updates.content) {
-    if (vaultManager) {
-      await syncTaskToNote(
-        task.noteId,
-        task.lineAnchor,
-        {
-          status: updates.status,
-          content: updates.content,
-        },
-        vaultManager
-      );
-    }
-  }
-});
-
-ipcMain.handle('task:delete', async (_event, id: string) => {
-  return await deleteTask(id);
-});
-
-ipcMain.handle('task:reorder', async (_event, status: 'open' | 'in-progress' | 'done' | 'cancelled', orderedIds: string[]) => {
-  await reorderTasksByStatus(status, orderedIds);
-});
-// Search IPC handlers
-ipcMain.handle('search:query', async (_event, queryString: string) => {
-  const documents = getAllDocuments();
-  const parsedQuery = parseQuery(queryString);
-  const results = searchDocuments(documents, parsedQuery);
-  return results;
-});
-
-ipcMain.handle('search:getAll', async () => {
-  return getAllDocuments();
-});
-
-// Kanban settings
-ipcMain.handle('kanban:getSettings', async () => {
-  return getKanbanSettings();
-});
-ipcMain.handle('kanban:setSettings', async (_event, kanban: any) => {
-  setKanbanSettings(kanban);
-});
-
-// General settings
-ipcMain.handle('settings:getAll', async () => {
-  return getAllSettings();
-});
-
-ipcMain.handle('settings:get', async (_event, key: string) => {
-  return getSettings(key);
-});
-
-ipcMain.handle('settings:set', async (_event, key: string, value: any) => {
-  setSettings(key, value);
-});
-
-ipcMain.handle('settings:update', async (_event, updates: Partial<Settings>) => {
-  updateSettings(updates);
-});
-
-// Window control IPC handlers
-ipcMain.handle('window:minimize', () => {
-  if (mainWindow) {
-    mainWindow.minimize();
-  }
-});
-
-ipcMain.handle('window:maximize', () => {
-  if (mainWindow) {
-    mainWindow.maximize();
-    return true;
-  }
-  return false;
-});
-
-ipcMain.handle('window:unmaximize', () => {
-  if (mainWindow) {
-    mainWindow.unmaximize();
-    return false;
-  }
-  return false;
-});
-
-ipcMain.handle('window:isMaximized', () => {
-  if (mainWindow) {
+  // ----- window controls -----
+  ipcMain.handle('window:minimize', () => mainWindow?.minimize());
+  ipcMain.handle('window:toggleMaximize', () => {
+    if (!mainWindow) return false;
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
     return mainWindow.isMaximized();
-  }
-  return false;
-});
-
-ipcMain.handle('window:close', () => {
-  if (mainWindow) {
-    mainWindow.close();
-  }
-});
-
-// Backlinks IPC handlers
-ipcMain.handle('backlinks:get', async (_event, noteId: string) => {
-  return await getBacklinks(noteId);
-});
-
-// Initialize default schemas if they don't exist
-async function initializeDefaultSchemas() {
-  const existingSchemas = await getAllSchemas();
-  const existingNames = new Set(existingSchemas.map(s => s.name));
-  
-  for (const schemaDef of Object.values(defaultSchemas)) {
-    if (!existingNames.has(schemaDef.name)) {
-      const zodJson = serializeZodSchema(schemaDef.schema);
-      await insertSchema({
-        name: schemaDef.name,
-        zodJson,
-      });
-      console.log(`Initialized default schema: ${schemaDef.name}`);
-    }
-  }
+  });
+  ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false);
+  ipcMain.handle('window:close', () => mainWindow?.close());
 }
-

@@ -1,0 +1,177 @@
+/* ============================================================
+   Skald — design tokens
+   Editor-native, dark-first. Teal accent, syntax tones.
+   ============================================================ */
+
+:root {
+  /* ---- Fonts ---- */
+  --font-ui:   "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Radii (sharp, editor-grade) ---- */
+  --r-1: 4px;
+  --r-2: 6px;
+  --r-3: 9px;
+  --r-4: 13px;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --fast: 110ms;
+  --med:  200ms;
+
+  /* ---- Density (overridden by [data-density]) ---- */
+  --row-h: 28px;
+  --pad-pane: 28px;
+  --gap: 20px;
+}
+
+/* =========================================================
+   DEFAULT THEME — "Midnight" (deep blue-black)
+   ========================================================= */
+:root,
+[data-theme="midnight"] {
+  color-scheme: dark;
+
+  /* Surfaces — darkest (activity) to lightest (popover) */
+  --bg-0:  #0a0c10;   /* activity bar / window edge */
+  --bg-1:  #0d1015;   /* sidebar / panels */
+  --bg-2:  #111620;   /* editor canvas */
+  --bg-3:  #161c27;   /* cards / raised rows */
+  --bg-4:  #1c2330;   /* hover / active row */
+  --bg-pop:#1a212d;   /* popovers, command palette */
+
+  /* Hairlines */
+  --line:   #1d2531;
+  --line-2: #28323f;
+  --line-3: #38465a;
+
+  /* Text */
+  --tx-0: #eaeef4;    /* brightest — titles */
+  --tx-1: #c3ccd8;    /* body */
+  --tx-2: #8a95a4;    /* muted / labels */
+  --tx-3: #5e6a7a;    /* faint / meta */
+  --tx-4: #3f4a59;    /* faintest / disabled */
+
+  /* Accent — teal */
+  --ac:      #6ae0c6;
+  --ac-bright:#8af0d8;
+  --ac-dim:  #3f8a7c;
+  --ac-ghost:rgba(106, 224, 198, 0.13);
+  --ac-line: rgba(106, 224, 198, 0.34);
+  --on-ac:   #062019;
+
+  /* Syntax tones */
+  --sy-teal:   #6ae0c6;
+  --sy-blue:   #6cb2ff;
+  --sy-purple: #b69cff;
+  --sy-green:  #84d99a;
+  --sy-orange: #f0a878;
+  --sy-red:    #f08a7c;
+  --sy-yellow: #e6cd7a;
+  --sy-gray:   #5e6a7a;
+
+  /* Status */
+  --ok:    #84d99a;
+  --warn:  #e6cd7a;
+  --err:   #f08a7c;
+  --info:  #6cb2ff;
+
+  /* Selection / glow */
+  --sel:   rgba(106, 224, 198, 0.16);
+  --shadow-pop: 0 1px 0 rgba(255,255,255,0.03) inset,
+                0 20px 60px -16px rgba(0,0,0,0.7),
+                0 0 0 1px var(--line-2);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.35);
+
+  /* Editor decoration */
+  --grid: rgba(255,255,255,0.018);
+  --gutter-tx: #44505f;
+}
+
+/* =========================================================
+   ALT DARK — "Slate" (neutral graphite)
+   ========================================================= */
+[data-theme="slate"] {
+  color-scheme: dark;
+  --bg-0:  #0c0d0e;
+  --bg-1:  #121315;
+  --bg-2:  #17191c;
+  --bg-3:  #1e2125;
+  --bg-4:  #25292e;
+  --bg-pop:#212429;
+  --line:   #24272c;
+  --line-2: #31363d;
+  --line-3: #434a53;
+  --tx-0: #ecedef;
+  --tx-1: #c6c9cd;
+  --tx-2: #8b9098;
+  --tx-3: #61666e;
+  --tx-4: #41464d;
+  --grid: rgba(255,255,255,0.02);
+  --gutter-tx: #4a4f57;
+}
+
+/* =========================================================
+   LIGHT — "Daybreak" (One Light-ish)
+   ========================================================= */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-0:  #e7e9ee;
+  --bg-1:  #eef0f4;
+  --bg-2:  #fafbfc;
+  --bg-3:  #f2f4f8;
+  --bg-4:  #e6eaf1;
+  --bg-pop:#ffffff;
+  --line:   #dde1e8;
+  --line-2: #cbd2dc;
+  --line-3: #aab3c0;
+  --tx-0: #1c2330;
+  --tx-1: #38414f;
+  --tx-2: #5e6878;
+  --tx-3: #8a94a3;
+  --tx-4: #b3bbc7;
+
+  --ac:      #119e84;
+  --ac-bright:#0e8a73;
+  --ac-dim:  #7fcdbd;
+  --ac-ghost:rgba(17, 158, 132, 0.10);
+  --ac-line: rgba(17, 158, 132, 0.30);
+  --on-ac:   #ffffff;
+
+  --sy-teal:   #119e84;
+  --sy-blue:   #2f74d0;
+  --sy-purple: #8155d6;
+  --sy-green:  #3f9d57;
+  --sy-orange: #c2722c;
+  --sy-red:    #d35d50;
+  --sy-yellow: #b58a1e;
+  --sy-gray:   #8a94a3;
+
+  --ok: #3f9d57; --warn:#b58a1e; --err:#d35d50; --info:#2f74d0;
+  --sel: rgba(17,158,132,0.13);
+  --shadow-pop: 0 20px 60px -16px rgba(40,52,74,0.30), 0 0 0 1px var(--line-2);
+  --shadow-card: 0 1px 2px rgba(40,52,74,0.08);
+  --grid: rgba(20,30,50,0.022);
+  --gutter-tx: #aab3c0;
+}
+
+/* =========================================================
+   Schema → tone mapping (shared)
+   ========================================================= */
+:root {
+  --schema-note:    var(--sy-teal);
+  --schema-project: var(--sy-orange);
+  --schema-person:  var(--sy-blue);
+  --schema-daily:   var(--sy-green);
+  --schema-idea:    var(--sy-purple);
+  --schema-source:  var(--sy-red);
+  --schema-code:    var(--sy-yellow);
+  --schema-place:   var(--sy-gray);
+}
+
+/* =========================================================
+   Density
+   ========================================================= */
+[data-density="compact"] { --row-h: 24px; --pad-pane: 22px; --gap: 14px; }
+[data-density="regular"] { --row-h: 28px; --pad-pane: 28px; --gap: 20px; }
+[data-density="cozy"]    { --row-h: 33px; --pad-pane: 40px; --gap: 28px; }

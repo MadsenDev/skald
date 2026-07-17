@@ -1,34 +1,35 @@
 {
   "name": "skald",
-  "version": "0.1.0",
-  "description": "A multiplayer, schema-aware Obsidian alternative",
+  "version": "2.0.0",
+  "description": "A local-first, schema-aware Markdown knowledge base",
   "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:electron": "npm run build:electron:main && npm run build:electron:preload",
     "build:electron:main": "vite build --config electron.vite.config.ts --mode main",
     "build:electron:preload": "vite build --config electron.vite.config.ts --mode preload",
+    "build:electron": "npm run build:electron:main && npm run build:electron:preload",
     "build:app": "vite build",
     "build": "npm run build:electron && npm run build:app",
-    "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"npm run build:electron && wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "electron:pack": "npm run build && electron-builder",
-    "pack:linux": "npm run build && electron-builder --linux",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json",
+    "test": "vitest run",
+    "screenshots": "node tools/screenshots.mjs"
   },
   "keywords": [
     "knowledge-base",
     "markdown",
-    "crdt",
-    "collaboration"
+    "notes",
+    "tasks",
+    "local-first"
   ],
   "author": "Christoffer Madsen <chris@madsens.dev>",
   "license": "MIT",
   "build": {
     "appId": "dev.madsens.skald",
     "productName": "Skald",
-    "copyright": "Copyright © 2026 Christoffer Madsen",
+    "copyright": "Copyright \u00a9 2026 Christoffer Madsen",
     "directories": {
       "buildResources": "build",
       "output": "release"
@@ -41,15 +42,25 @@
       "icon": "build/icons",
       "category": "Utility",
       "target": [
-        { "target": "AppImage", "arch": ["x64", "arm64"] },
-        { "target": "deb",      "arch": ["x64", "arm64"] },
-        { "target": "rpm",      "arch": ["x64", "arm64"] },
-        { "target": "pacman",   "arch": ["x64", "arm64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "maintainer": "Christoffer Madsen <chris@madsens.dev>",
       "vendor": "Christoffer Madsen",
       "synopsis": "Local-first Markdown knowledge base",
-      "description": "Skald is a local-first Markdown note-taking app with schema-driven frontmatter, task management, and multi-theme UI."
+      "description": "Skald is a local-first Markdown note-taking app with schema-typed notes, task threads extracted from your writing, a stable knowledge graph, and an editor-native UI."
     }
   },
   "devDependencies": {
@@ -57,43 +68,20 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.16",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^31.0.0",
     "electron-builder": "^24.9.1",
-    "postcss": "^8.4.32",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.5",
     "vite": "^5.0.11",
-    "wait-on": "^7.2.0"
+    "vitest": "^1.6.0",
+    "wait-on": "^7.2.0",
+    "playwright-core": "^1.44.0"
   },
   "dependencies": {
-    "@lexical/code": "^0.38.2",
-    "@lexical/link": "^0.38.2",
-    "@lexical/list": "^0.38.2",
-    "@lexical/markdown": "^0.38.2",
-    "@lexical/react": "^0.38.2",
-    "@lexical/rich-text": "^0.38.2",
-    "@lexical/utils": "^0.38.2",
-    "@monaco-editor/react": "^4.6.0",
-    "@types/dompurify": "^3.0.5",
-    "chokidar": "^3.5.3",
-    "framer-motion": "^10.16.16",
-    "lexical": "^0.38.2",
-    "mdast": "^2.3.2",
+    "chokidar": "^3.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^5.2.1",
-    "react-markdown": "^10.1.0",
-    "rehype-highlight": "^7.0.2",
-    "remark-directive": "^4.0.0",
-    "remark-gfm": "^4.0.1",
-    "remark-parse": "^11.0.0",
-    "tailwindcss": "^3.4.1",
-    "unified": "^11.0.5",
-    "unist-util-visit": "^5.0.0",
-    "yjs": "^13.6.10",
-    "zod": "^3.22.4",
-    "zustand": "^4.4.7"
+    "zustand": "^4.5.2"
   }
 }

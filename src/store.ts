@@ -1,0 +1,198 @@
+import { create } from 'zustand';
+import type { VaultSnapshot } from '../src-shared/types';
+import { api } from './api';
+
+export type View =
+  | 'logbook'
+  | 'editor'
+  | 'tasks-table'
+  | 'tasks-kanban'
+  | 'tasks-calendar'
+  | 'graph'
+  | 'settings';
+
+export interface Tab {
+  kind: 'logbook' | 'editor';
+  /** 'today' for the logbook tab, note path for editor tabs */
+  id: string;
+}
+
+export type Phase = 'boot' | 'picker' | 'ready';
+
+interface SkaldState {
+  phase: Phase;
+  snapshot: VaultSnapshot | null;
+  view: View;
+  selectedPath: string | null;
+  tabs: Tab[];
+  dirtyPaths: Record<string, boolean>;
+  switcherOpen: boolean;
+  toast: string | null;
+  docStatus: { schema?: string; words?: number; lncol?: [number, number] | null };
+  setDocStatus: (d: { schema?: string; words?: number; lncol?: [number, number] | null }) => void;
+
+  boot: () => Promise<void>;
+  openVaultAt: (path: string, create: boolean) => Promise<void>;
+  switchVault: () => void;
+  applySnapshot: (s: VaultSnapshot) => void;
+
+  setView: (v: View) => void;
+  openNote: (path: string) => void;
+  openLogbook: () => void;
+  closeTab: (id: string) => void;
+  setDirty: (path: string, dirty: boolean) => void;
+  notePathRenamed: (oldPath: string, newPath: string) => void;
+  setSwitcherOpen: (open: boolean) => void;
+  showToast: (msg: string) => void;
+}
+
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+export const useStore = create<SkaldState>((set, get) => ({
+  phase: 'boot',
+  snapshot: null,
+  view: 'logbook',
+  selectedPath: null,
+  tabs: [{ kind: 'logbook', id: 'today' }],
+  dirtyPaths: {},
+  switcherOpen: false,
+  toast: null,
+  docStatus: {},
+  setDocStatus: (d) => set({ docStatus: d }),
+
+  boot: async () => {
+    api.onVaultChanged((s) => get().applySnapshot(s));
+    const last = await api.getLastVault();
+    if (!last) {
+      set({ phase: 'picker' });
+      return;
+    }
+    try {
+      const snapshot = await api.openVault(last);
+      set({ phase: 'ready', snapshot });
+    } catch {
+      set({ phase: 'picker' });
+    }
+  },
+
+  openVaultAt: async (path, createNew) => {
+    const snapshot = createNew ? await api.createVault(path) : await api.openVault(path);
+    set({
+      phase: 'ready',
+      snapshot,
+      view: 'logbook',
+      tabs: [{ kind: 'logbook', id: 'today' }],
+      selectedPath: null,
+      dirtyPaths: {},
+    });
+  },
+
+  switchVault: () => set({ phase: 'picker' }),
+
+  applySnapshot: (s) => {
+    const { tabs, selectedPath, view } = get();
+    const alive = new Set(s.notes.map((n) => n.path));
+    const nextTabs = tabs.filter((t) => t.kind === 'logbook' || alive.has(t.id));
+    const patch: Partial<SkaldState> = { snapshot: s, tabs: nextTabs };
+    if (selectedPath && !alive.has(selectedPath)) {
+      patch.selectedPath = null;
+      if (view === 'editor') patch.view = 'logbook';
+    }
+    set(patch);
+  },
+
+  setView: (v) => set({ view: v }),
+
+  openNote: (path) => {
+    const { tabs } = get();
+    const next = tabs.some((t) => t.id === path)
+      ? tabs
+      : [...tabs, { kind: 'editor' as const, id: path }];
+    set({ tabs: next, selectedPath: path, view: 'editor' });
+  },
+
+  openLogbook: () => {
+    const { tabs } = get();
+    const next = tabs.some((t) => t.kind === 'logbook')
+      ? tabs
+      : [{ kind: 'logbook' as const, id: 'today' }, ...tabs];
+    set({ tabs: next, view: 'logbook' });
+  },
+
+  closeTab: (id) => {
+    const { tabs, view, selectedPath } = get();
+    const closing = tabs.find((t) => t.id === id);
+    const next = tabs.filter((t) => t.id !== id);
+    const patch: Partial<SkaldState> = { tabs: next };
+    const wasActive =
+      (closing?.kind === 'logbook' && view === 'logbook') ||
+      (closing?.kind === 'editor' && view === 'editor' && selectedPath === id);
+    if (wasActive) {
+      const fallback = next[next.length - 1];
+      if (!fallback) {
+        patch.view = 'logbook';
+        patch.tabs = [{ kind: 'logbook', id: 'today' }];
+      } else if (fallback.kind === 'logbook') {
+        patch.view = 'logbook';
+      } else {
+        patch.view = 'editor';
+        patch.selectedPath = fallback.id;
+      }
+    }
+    set(patch);
+  },
+
+  setDirty: (path, dirty) =>
+    set((st) => ({ dirtyPaths: { ...st.dirtyPaths, [path]: dirty } })),
+
+  notePathRenamed: (oldPath, newPath) =>
+    set((st) => ({
+      tabs: st.tabs.map((t) => (t.id === oldPath ? { ...t, id: newPath } : t)),
+      selectedPath: st.selectedPath === oldPath ? newPath : st.selectedPath,
+    })),
+
+  setSwitcherOpen: (open) => set({ switcherOpen: open }),
+
+  showToast: (msg) => {
+    if (toastTimer) clearTimeout(toastTimer);
+    set({ toast: msg });
+    toastTimer = setTimeout(() => set({ toast: null }), 2600);
+  },
+}));
+
+// ---------- tiny date helpers used across views ----------
+
+export function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+}
+
+export function relTime(ts: number): string {
+  const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d`;
+  const mo = Math.floor(d / 30);
+  return mo < 12 ? `${mo}mo` : `${Math.floor(mo / 12)}y`;
+}
+
+export function relTimeLong(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const dayDiff = Math.floor(
+    (new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() -
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) /
+      86400000
+  );
+  if (dayDiff <= 0) return `today · ${time}`;
+  if (dayDiff === 1) return `yesterday · ${time}`;
+  if (dayDiff < 7) return `${dayDiff} days ago`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

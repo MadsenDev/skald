@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "outDir": "./dist-electron",
+    "noEmit": false,
+    "composite": false
+  },
+  "include": ["src-main/**/*"],
+  "exclude": ["node_modules", "dist", "dist-electron"]
+}
+
