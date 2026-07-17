@@ -8,6 +8,8 @@ Everything is plain Markdown files in a folder you own. Skald keeps its index, s
 and graph layout in a `.skald/` directory inside the vault — delete it and nothing of
 yours is lost.
 
+![The Logbook — Skald's Today view](docs/screenshots/logbook.png)
+
 ## What it does
 
 - **Typed notes** — every note has a schema (`Note`, `Project`, `Person`, `Daily`, `Idea`,
@@ -26,6 +28,15 @@ yours is lost.
 - **Skald's Hall** — `⌘K` fuzzy search across notes, tasks, and commands with a live
   preview pane.
 - **Three surfaces** — Midnight, Slate, and Daybreak themes; three densities; three marks.
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Editor with margin panel](docs/screenshots/editor.png) *Editor — reading view, typed frontmatter, backlinks margin* | ![Source view](docs/screenshots/editor-src.png) *Editor — source view with autosave* |
+| ![Kanban board](docs/screenshots/tasks-kanban.png) *Threads — kanban, drag to change status* | ![Task table](docs/screenshots/tasks-table.png) *Threads — table* |
+| ![Calendar](docs/screenshots/tasks-calendar.png) *Threads — calendar* | ![Constellation graph](docs/screenshots/graph.png) *The Constellation — stable, draggable star map* |
+| ![Command palette](docs/screenshots/switcher.png) *Skald's Hall — ⌘K fuzzy search with preview* | ![Daybreak theme](docs/screenshots/settings-light.png) *Settings — the Daybreak surface* |
 
 ## Development
 
