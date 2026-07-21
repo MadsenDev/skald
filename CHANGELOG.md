@@ -9,10 +9,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [2.1.1] - 2026-07-21
 
+### Added
+
+- Added Linux app icon assets for packaged releases.
+
 ### Fixed
 
 - Fixed vault creation when the selected vault path is relative, allowing the starter
   `Welcome to Skald.md` note to be seeded at the vault root.
+- Fixed packaged app icon wiring for the Linux desktop entry and application window.
 
 ## [2.1.0] - 2026-07-21
 

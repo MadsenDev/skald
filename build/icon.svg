@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Skald">
+  <defs>
+    <linearGradient id="bg" x1="166" y1="122" x2="858" y2="902" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#151c27"/>
+      <stop offset="1" stop-color="#080b0f"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="256" y1="192" x2="768" y2="832" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8af0d8"/>
+      <stop offset="1" stop-color="#37bfa6"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="204" fill="url(#bg)"/>
+  <rect x="84" y="84" width="856" height="856" rx="184" fill="none" stroke="#28323f" stroke-width="28"/>
+  <path d="M704 228H320v276h384v292H320" fill="none" stroke="#dfe9f1" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#0a0c10" stroke="#dfe9f1" stroke-width="32">
+    <circle cx="704" cy="228" r="54"/>
+    <circle cx="320" cy="228" r="54"/>
+    <circle cx="320" cy="504" r="54"/>
+    <circle cx="704" cy="796" r="54"/>
+    <circle cx="320" cy="796" r="54"/>
+  </g>
+  <circle cx="704" cy="504" r="74" fill="url(#mark)" stroke="#8af0d8" stroke-width="28"/>
+</svg>
