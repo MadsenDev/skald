@@ -55,6 +55,25 @@ npm test               # vitest — core logic + vault end-to-end
 npm run electron:pack  # build distributables
 ```
 
+CI runs on pull requests and pushes to `main`:
+
+- `npm ci`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+
+Releases are tag-driven. To publish a release, move the changelog entries out of
+`[Unreleased]`, bump `package.json` and `package-lock.json`, merge that change, then push
+a matching tag:
+
+```bash
+git tag v2.1.0
+git push origin v2.1.0
+```
+
+The release workflow checks that the tag, package version, and changelog section match,
+then packages Linux x64 AppImage/deb artifacts and attaches them to a GitHub Release.
+
 Repo layout:
 
 - `src-main/` — Electron main process: vault manager (scan, watch, index, tasks,
