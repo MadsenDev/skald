@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-07-22
+
+### Fixed
+
+- Fixed a blank renderer screen that could appear after creating or opening a note
+  before the vault snapshot finished refreshing.
+
 ## [2.1.1] - 2026-07-21
 
 ### Added

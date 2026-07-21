@@ -123,8 +123,11 @@ export default function App() {
           </div>
 
           <div className="view-host">
-            {view === 'editor' && selectedPath && (
+            {view === 'editor' && selectedPath && note && (
               <EditorView snapshot={snapshot} path={selectedPath} />
+            )}
+            {view === 'editor' && selectedPath && !note && (
+              <div className="empty-note">This note is syncing — it will open in a moment.</div>
             )}
             {view === 'editor' && !selectedPath && (
               <div className="empty-note">No note open. ⌘K to find one.</div>
