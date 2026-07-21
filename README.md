@@ -30,6 +30,8 @@ it and your Markdown remains untouched.
 - **First-class attachments** — pick or drop any file, paste clipboard images, and Skald
   copies them into the vault with collision-safe names and portable relative Markdown links.
   Images render inline; files can be opened or revealed from the editor.
+- **Live Markdown editing** — write in rendered blocks by default, with raw source mode still
+  one shortcut away when you want to work directly with the Markdown file.
 - **Skald's Hall** — `⌘K` fuzzy search across notes, tasks, and commands with a live
   preview pane.
 - **Three surfaces** — Midnight, Slate, and Daybreak themes; three densities; three marks.
