@@ -11,6 +11,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - Added a live Markdown editor surface with rendered blocks that can be edited inline.
 
+### Changed
+
+- Refreshed the website copy to reflect live editing, attachments, and local note history.
+
 ## [2.1.0] - 2026-07-21
 
 ### Added
