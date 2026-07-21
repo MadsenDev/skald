@@ -1,5 +1,7 @@
 import type {
   NotePayload,
+  NoteHistoryEntry,
+  NoteHistoryVersion,
   SchemaName,
   VaultSettings,
   VaultSnapshot,
@@ -39,6 +41,12 @@ export const api = {
   renameNote: (path: string, newTitle: string) =>
     bridge().invoke('note:rename', path, newTitle) as Promise<string>,
   deleteNote: (path: string) => bridge().invoke('note:delete', path) as Promise<void>,
+  listNoteHistory: (path: string) =>
+    bridge().invoke('note:history:list', path) as Promise<NoteHistoryEntry[]>,
+  readNoteHistoryVersion: (path: string, id: string) =>
+    bridge().invoke('note:history:read', path, id) as Promise<NoteHistoryVersion>,
+  restoreNoteHistoryVersion: (path: string, id: string) =>
+    bridge().invoke('note:history:restore', path, id) as Promise<void>,
   createFolder: (path: string) => bridge().invoke('folder:create', path) as Promise<void>,
 
   // tasks
