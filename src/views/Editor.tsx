@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  AttachmentImportResult,
+  AttachmentRef,
   NoteHistoryEntry,
   NoteHistoryVersion,
   NotePayload,
@@ -32,6 +34,7 @@ export function EditorView({
   const [draft, setDraft] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [draggingFiles, setDraggingFiles] = useState(false);
   const [lncol, setLncol] = useState<[number, number] | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -127,6 +130,75 @@ export function EditorView({
     };
   }, [path]);
 
+  const insertAttachments = useCallback(
+    async (items: AttachmentImportResult[]) => {
+      if (items.length === 0) return;
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+
+      const current = draft ?? payload?.content ?? '';
+      const block = items.map((item) => item.markdown).join('\n');
+      const textarea = mode === 'source' ? taRef.current : null;
+      const start = textarea?.selectionStart ?? current.length;
+      const end = textarea?.selectionEnd ?? current.length;
+      const before = current.slice(0, start);
+      const after = current.slice(end);
+      const prefix = before.length === 0 || before.endsWith('\n') ? '' : '\n\n';
+      const suffix = after.length === 0 ? '\n' : after.startsWith('\n') ? '' : '\n\n';
+      const next = before + prefix + block + suffix + after;
+
+      try {
+        await api.writeNote(path, next);
+        const fresh = await api.readNote(path);
+        setPayload(fresh);
+        setDraft(null);
+        setDirtyStore(path, false);
+        showToast(items.length === 1 ? `Attached ${items[0].name}` : `Attached ${items.length} files`);
+
+        if (textarea) {
+          const cursor = (before + prefix + block + suffix).length;
+          requestAnimationFrame(() => {
+            taRef.current?.focus();
+            taRef.current?.setSelectionRange(cursor, cursor);
+          });
+        }
+      } catch (err) {
+        showToast(`Could not attach file: ${String((err as Error).message ?? err)}`);
+      }
+    },
+    [draft, mode, path, payload?.content, setDirtyStore, showToast]
+  );
+
+  const importFiles = useCallback(
+    async (files: File[]) => {
+      const withPaths = files.map((file) => ({ file, path: api.pathForFile(file) }));
+      const pathFiles = withPaths.filter((item) => item.path);
+      const memoryFiles = withPaths.filter((item) => !item.path).map((item) => item.file);
+      const imported: AttachmentImportResult[] = [];
+
+      try {
+        if (pathFiles.length > 0) {
+          imported.push(...(await api.importAttachmentPaths(path, pathFiles.map((item) => item.path))));
+        }
+        for (const file of memoryFiles) {
+          const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
+          imported.push(
+            await api.importAttachmentData(path, file.name || 'attachment', file.type, bytes)
+          );
+        }
+        await insertAttachments(imported);
+      } catch (err) {
+        showToast(`Could not import file: ${String((err as Error).message ?? err)}`);
+      }
+    },
+    [insertAttachments, path, showToast]
+  );
+
+  const attachmentFor = useCallback(
+    (target: string): AttachmentRef | null =>
+      payload?.attachments.find((item) => item.target === target) ?? null,
+    [payload?.attachments]
+  );
+
   if (!meta) {
     return <div className="empty-note">This note is gone — it may have been deleted on disk.</div>;
   }
@@ -147,6 +219,9 @@ export function EditorView({
     },
     openNote,
     openExternal: (url) => window.open(url),
+    resolveAttachment: attachmentFor,
+    openAttachment: (attachmentPath) => void api.openAttachment(attachmentPath),
+    attachmentUrl: api.attachmentUrl,
     toggleTask: (line, done) => {
       void api.updateTask(taskId(path, line), { status: done ? 'done' : 'open' });
     },
@@ -181,7 +256,35 @@ export function EditorView({
 
   return (
     <div className={'editor-shell' + (marginOn ? '' : ' editor-shell--no-margin')}>
-      <div className="editor-pane">
+      <div
+        className={'editor-pane' + (draggingFiles ? ' editor-pane--dragging' : '')}
+        onDragEnter={(e) => {
+          if (e.dataTransfer.types.includes('Files')) {
+            e.preventDefault();
+            setDraggingFiles(true);
+          }
+        }}
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes('Files')) e.preventDefault();
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDraggingFiles(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDraggingFiles(false);
+          void importFiles(Array.from(e.dataTransfer.files));
+        }}
+        onPaste={(e) => {
+          const images = Array.from(e.clipboardData.files).filter((file) =>
+            file.type.startsWith('image/')
+          );
+          if (images.length === 0) return;
+          e.preventDefault();
+          void importFiles(images);
+        }}
+      >
+        {draggingFiles && <div className="editor-drop-overlay">Drop files to attach</div>}
         <div className="editor-page" ref={previewRef}>
           <div className="editor-eyebrow">
             <span className="dot" />
@@ -189,6 +292,13 @@ export function EditorView({
             <span style={{ marginLeft: 'auto', color: 'var(--tx-3)' }}>
               {dirty ? 'editing…' : `edited ${relTime(meta.updated)} ago`}
             </span>
+            <button
+              className="editor-attach-button"
+              title="Attach files"
+              onClick={() => void api.selectAttachments(path).then(insertAttachments)}
+            >
+              + attach
+            </button>
             <span className="editor-mode-toggle">
               <button aria-selected={mode === 'preview'} onClick={() => setMode('preview')} title="Reading view — ⌘E">
                 read
@@ -343,6 +453,46 @@ export function EditorView({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {(payload?.attachments.length ?? 0) > 0 && (
+            <div className="margin__group">
+              <div className="margin__heading">
+                Attachments <span className="count">{payload?.attachments.length}</span>
+              </div>
+              {payload?.attachments.map((attachment, index) => (
+                <div
+                  key={`${attachment.target}-${index}`}
+                  className="margin__attachment"
+                  data-missing={!attachment.exists}
+                >
+                  <button
+                    className="margin__attachment-main"
+                    disabled={!attachment.exists || !attachment.path}
+                    onClick={() => attachment.path && void api.openAttachment(attachment.path)}
+                  >
+                    <span className="margin__attachment-kind">{attachment.kind}</span>
+                    <span>
+                      <strong>{attachment.label || attachment.target.split('/').pop()}</strong>
+                      <small>
+                        {attachment.exists && attachment.size !== null
+                          ? formatBytes(attachment.size)
+                          : 'missing'}
+                      </small>
+                    </span>
+                  </button>
+                  {attachment.exists && attachment.path && (
+                    <button
+                      className="margin__attachment-reveal"
+                      title="Reveal in file manager"
+                      onClick={() => void api.revealAttachment(attachment.path!)}
+                    >
+                      ↗
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 

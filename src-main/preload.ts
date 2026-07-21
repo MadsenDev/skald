@@ -1,10 +1,11 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 // Thin, typed-on-the-renderer-side bridge. Every call is invoke-based; the
 // only push channels are vault:changed (snapshots) and window:maximized.
 
 const api = {
   invoke: (channel: string, ...args: unknown[]) => ipcRenderer.invoke(channel, ...args),
+  pathForFile: (file: File) => webUtils.getPathForFile(file),
   onVaultChanged: (cb: (snapshot: unknown) => void) => {
     const handler = (_e: unknown, snapshot: unknown) => cb(snapshot);
     ipcRenderer.on('vault:changed', handler);
