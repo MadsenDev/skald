@@ -38,6 +38,12 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/icons/256x256.png",
+        "to": "icons/256x256.png"
+      }
+    ],
     "linux": {
       "icon": "build/icons",
       "category": "Utility",

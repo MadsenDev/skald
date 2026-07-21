@@ -16,6 +16,12 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'skald-asset', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 
+function appIconPath(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'icons', '256x256.png')
+    : join(__dirname, '../build/icons/256x256.png');
+}
+
 function createWindow() {
   const cfg = loadAppConfig();
   mainWindow = new BrowserWindow({
@@ -24,6 +30,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     frame: false,
+    icon: appIconPath(),
     backgroundColor: '#0a0c10',
     webPreferences: {
       preload: join(__dirname, 'preload.cjs'),
