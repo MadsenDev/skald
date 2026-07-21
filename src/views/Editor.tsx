@@ -14,6 +14,15 @@ import { api } from '../api';
 import { useStore, todayISO, relTime } from '../store';
 import { taskId } from '../../src-shared/tasks';
 import { countWords } from '../../src-shared/notes';
+import { parseFrontmatter } from '../../src-shared/frontmatter';
+import {
+  replaceMarkdownBody,
+  replaceMarkdownBlock,
+  splitMarkdownBlocks,
+  type MarkdownBlock,
+} from '../../src-shared/liveMarkdown';
+
+type EditorMode = 'live' | 'preview' | 'source';
 
 export function EditorView({
   snapshot,
@@ -30,7 +39,7 @@ export function EditorView({
   const marginOn = snapshot.settings.marginOn;
 
   const [payload, setPayload] = useState<NotePayload | null>(null);
-  const [mode, setMode] = useState<'preview' | 'source'>('preview');
+  const [mode, setMode] = useState<EditorMode>('live');
   const [draft, setDraft] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -59,7 +68,7 @@ export function EditorView({
 
   // load on note switch
   useEffect(() => {
-    setMode('preview');
+    setMode('live');
     setDraft(null);
     setLncol(null);
     void load();
@@ -77,7 +86,7 @@ export function EditorView({
     setDocStatus({
       schema: meta?.schema,
       words,
-      lncol: mode === 'source' ? lncol : null,
+      lncol: mode === 'source' || mode === 'live' ? lncol : null,
     });
     return () => setDocStatus({});
   }, [meta?.schema, payload, draft, mode, lncol]);
@@ -116,7 +125,7 @@ export function EditorView({
       }
       if (mod && e.key === 'e') {
         e.preventDefault();
-        setMode((m) => (m === 'preview' ? 'source' : 'preview'));
+        setMode((m) => (m === 'source' ? 'live' : 'source'));
       }
     };
     window.addEventListener('keydown', h);
@@ -204,8 +213,9 @@ export function EditorView({
   }
 
   const content = draft ?? payload?.content ?? '';
-  const body = payload?.body ?? '';
-  const bodyStartLine = payload?.bodyStartLine ?? 0;
+  const parsedContent = useMemo(() => parseFrontmatter(content), [content]);
+  const body = parsedContent.body;
+  const bodyStartLine = parsedContent.bodyStartLine;
 
   const mdCtx: MdContext = {
     resolve: (target) => {
@@ -238,6 +248,13 @@ export function EditorView({
     scheduleSave(v);
   };
 
+  const onBodyChange = (nextBody: string) => {
+    const next = replaceMarkdownBody(content, bodyStartLine, nextBody);
+    setDraft(next);
+    setDirtyStore(path, true);
+    scheduleSave(next);
+  };
+
   const updateLnCol = () => {
     const ta = taRef.current;
     if (!ta) return;
@@ -247,7 +264,7 @@ export function EditorView({
   };
 
   const scrollToHeading = (line: number) => {
-    setMode('preview');
+    setMode((m) => (m === 'source' ? 'live' : m));
     requestAnimationFrame(() => {
       const el = previewRef.current?.querySelector(`#h-${line}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -300,7 +317,10 @@ export function EditorView({
               + attach
             </button>
             <span className="editor-mode-toggle">
-              <button aria-selected={mode === 'preview'} onClick={() => setMode('preview')} title="Reading view — ⌘E">
+              <button aria-selected={mode === 'live'} onClick={() => setMode('live')} title="Live editor — ⌘E">
+                live
+              </button>
+              <button aria-selected={mode === 'preview'} onClick={() => setMode('preview')} title="Reading view">
                 read
               </button>
               <button aria-selected={mode === 'source'} onClick={() => setMode('source')} title="Source view — ⌘E">
@@ -317,7 +337,7 @@ export function EditorView({
             {meta.title}
           </h1>
 
-          {mode === 'preview' ? (
+          {mode !== 'source' ? (
             <>
               <div className="editor-frontmatter" data-schema={meta.schema}>
                 <div className="k">title</div>
@@ -356,15 +376,26 @@ export function EditorView({
                 )}
               </div>
 
-              <div className="editor-body">
-                {body.trim() ? (
-                  renderMarkdown(body, mdCtx)
-                ) : (
-                  <p className="editor-empty-hint">
-                    An empty page. Switch to <code>src</code> (⌘E) and start writing.
-                  </p>
-                )}
-              </div>
+              {mode === 'live' ? (
+                <LiveMarkdownEditor
+                  body={body}
+                  ctx={mdCtx}
+                  fontSize={snapshot.settings.editorFontSize}
+                  onChange={onBodyChange}
+                  onBlur={saveNow}
+                  onLnCol={setLncol}
+                />
+              ) : (
+                <div className="editor-body">
+                  {body.trim() ? (
+                    renderMarkdown(body, mdCtx)
+                  ) : (
+                    <p className="editor-empty-hint">
+                      An empty page. Switch to <code>live</code> (⌘E) and start writing.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <AddThread path={path} />
 
@@ -698,6 +729,123 @@ function formatHistoryDate(ts: number): string {
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   return `${(bytes / 1024).toFixed(bytes < 10_240 ? 1 : 0)} KB`;
+}
+
+function LiveMarkdownEditor({
+  body,
+  ctx,
+  fontSize,
+  onChange,
+  onBlur,
+  onLnCol,
+}: {
+  body: string;
+  ctx: MdContext;
+  fontSize: number;
+  onChange: (body: string) => void;
+  onBlur: () => void;
+  onLnCol: (pos: [number, number] | null) => void;
+}) {
+  const [activeStartLine, setActiveStartLine] = useState<number | null>(null);
+  const activeRef = useRef<HTMLTextAreaElement>(null);
+  const blocks = useMemo(() => splitMarkdownBlocks(body), [body]);
+
+  useEffect(() => {
+    if (activeStartLine === null) return;
+    requestAnimationFrame(() => {
+      const ta = activeRef.current;
+      if (!ta) return;
+      ta.focus();
+      ta.selectionStart = ta.value.length;
+      ta.selectionEnd = ta.value.length;
+      updateLiveLnCol(ta, ctx.lineOffset + activeStartLine, onLnCol);
+    });
+  }, [activeStartLine, onLnCol]);
+
+  const beginEdit = (block: MarkdownBlock) => {
+    setActiveStartLine(block.startLine);
+  };
+
+  const commitBlur = () => {
+    onLnCol(null);
+    onBlur();
+  };
+
+  return (
+    <div className="editor-body editor-body--live">
+      {blocks.map((block) => {
+        const active = block.startLine === activeStartLine;
+        if (active) {
+          return (
+            <div key={`edit-${block.id}`} className="live-block live-block--active" data-kind={block.kind}>
+              <textarea
+                ref={activeRef}
+                className="live-block__textarea"
+                value={block.raw}
+                rows={Math.max(2, block.raw.split('\n').length)}
+                spellCheck
+                style={{ fontSize }}
+                onChange={(e) => {
+                  const next = replaceMarkdownBlock(body, block, e.target.value);
+                  onChange(next);
+                }}
+                onClick={(e) => updateLiveLnCol(e.currentTarget, ctx.lineOffset + block.startLine, onLnCol)}
+                onKeyUp={(e) => updateLiveLnCol(e.currentTarget, ctx.lineOffset + block.startLine, onLnCol)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setActiveStartLine(null);
+                    onLnCol(null);
+                    onBlur();
+                  }
+                }}
+                onBlur={commitBlur}
+              />
+            </div>
+          );
+        }
+
+        if (block.kind === 'blank') {
+          return (
+            <button
+              key={block.id}
+              className="live-block live-block--blank"
+              onClick={() => beginEdit(block)}
+              type="button"
+            >
+              Write here
+            </button>
+          );
+        }
+
+        return (
+          <div
+            key={block.id}
+            className="live-block"
+            data-kind={block.kind}
+            title="Click to edit this Markdown block"
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest('a, button, input, .checkbox, .attachment-card, .attachment-image')) return;
+              beginEdit(block);
+            }}
+          >
+            {renderMarkdown(block.raw, { ...ctx, lineOffset: ctx.lineOffset + block.startLine })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function updateLiveLnCol(
+  textarea: HTMLTextAreaElement,
+  startLine: number,
+  onLnCol: (pos: [number, number]) => void
+) {
+  const upto = textarea.value.slice(0, textarea.selectionStart);
+  const lines = upto.split('\n');
+  onLnCol([startLine + lines.length, lines[lines.length - 1].length + 1]);
 }
 
 function FmRow({ k, v, ctx }: { k: string; v: unknown; ctx: MdContext }) {
