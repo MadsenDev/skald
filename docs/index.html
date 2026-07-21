@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Skald — a local-first Markdown knowledge base</title>
-<meta name="description" content="Skald is a local-first, schema-aware Markdown knowledge base. Notes are pages of a saga, tasks are open threads, and the knowledge graph is a constellation.">
-<meta property="og:title" content="Skald — a local-first Markdown knowledge base">
-<meta property="og:description" content="Typed notes, task threads extracted from your writing, a stable knowledge graph, and an editor-native UI. Plain Markdown files in a folder you own.">
+<title>Skald — local-first Markdown for thinking, planning, and doing</title>
+<meta name="description" content="Skald turns local Markdown notes into an organised system for thinking, planning, and doing. Typed notes, task threads, live editing, attachments, history, and a stable graph.">
+<meta property="og:title" content="Skald — local-first Markdown for thinking, planning, and doing">
+<meta property="og:description" content="Typed notes, task threads, live Markdown editing, attachments, local note history, and a stable graph. Plain Markdown files in a folder you own.">
 <meta property="og:image" content="https://skald.vardir.no/screenshots/logbook.png">
 <meta property="og:url" content="https://skald.vardir.no">
 <meta property="og:type" content="website">
@@ -159,9 +159,10 @@ footer .links a:hover{color:var(--tx-0)}
   </a>
   <div class="nav-links">
     <a href="#features" class="nav-link">Features</a>
+    <a href="#new" class="nav-link">What's new</a>
     <a href="#gallery" class="nav-link">Gallery</a>
     <a href="#keys" class="nav-link">Keys</a>
-    <a href="https://github.com/MadsenDev/skald/releases" class="nav-cta">Download</a>
+    <a href="https://github.com/vardirhq/skald/releases" class="nav-cta">Download</a>
   </div>
   <button class="burger" aria-label="Menu" aria-expanded="false" id="burger">
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -172,26 +173,27 @@ footer .links a:hover{color:var(--tx-0)}
 </nav>
 <div class="mobile-menu" id="mobile-menu">
   <a href="#features">Features</a>
+  <a href="#new">What's new</a>
   <a href="#gallery">Gallery</a>
   <a href="#keys">Keys</a>
-  <a href="https://github.com/MadsenDev/skald/releases" class="mobile-cta">Download</a>
+  <a href="https://github.com/vardirhq/skald/releases" class="mobile-cta">Download</a>
 </div>
 
 <!-- Hero -->
 <header id="top">
   <div class="stars" id="stars"></div>
   <div class="hero-inner">
-    <div class="pill"><span class="dot"></span>local-first · plain Markdown · MIT</div>
-    <h1>Keep the saga alive.</h1>
-    <p class="lede">A <em>skáld</em> was the Old Norse poet who kept the story going. Skald does the same for your notes: pages of a saga, tasks as open threads, and a knowledge graph laid out as a constellation — all plain Markdown in a folder you own.</p>
+    <div class="pill"><span class="dot"></span>local-first · live Markdown · MIT</div>
+    <h1>Markdown with a working memory.</h1>
+    <p class="lede">Skald turns plain Markdown notes into an organised system for thinking, planning, and doing: typed pages, open threads, live editing, local history, first-class files, and a constellation you can return to.</p>
     <div class="cta-row">
-      <a href="https://github.com/MadsenDev/skald/releases" class="btn">Download for Linux</a>
-      <a href="https://github.com/MadsenDev/skald" class="btn-ghost">
+      <a href="https://github.com/vardirhq/skald/releases" class="btn">Download for Linux</a>
+      <a href="https://github.com/vardirhq/skald" class="btn-ghost">
         <svg width="18" height="18" viewBox="0 0 16 16" style="fill:var(--tx-0)"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg>
         View on GitHub
       </a>
     </div>
-    <div class="hero-note">AppImage &amp; deb · x64 / arm64 · or build from source</div>
+    <div class="hero-note">Linux-first · AppImage &amp; deb · x64 / arm64 · or build from source</div>
   </div>
   <div class="hero-shot">
     <div class="hero-glow"></div>
@@ -205,14 +207,19 @@ footer .links a:hover{color:var(--tx-0)}
 <section id="features">
   <div class="section-inner">
     <div class="section-head">
-      <div class="kicker">THE SAGA, IN PARTS</div>
-      <h2>Everything is a page of the story</h2>
+      <div class="kicker">THE SYSTEM, IN PARTS</div>
+      <h2>Not just notes. A workspace that understands them.</h2>
     </div>
     <div class="feature-grid">
       <div class="card">
-        <div class="rune" style="color:var(--ac)">᛭ typed</div>
-        <div class="title">Typed notes</div>
-        <div class="body">Every note has a schema — Note, Project, Person, Daily, Idea, Source, Code, Place — set via frontmatter or inferred from its folder. Each schema carries a monoline rune that follows the note everywhere.</div>
+        <div class="rune" style="color:var(--ac)">᛭ types</div>
+        <div class="title">Typed Markdown</div>
+        <div class="body">Projects, People, Daily notes, Ideas, Sources, Code, Places, and normal Notes are still plain Markdown, but Skald treats them as different kinds of work.</div>
+      </div>
+      <div class="card">
+        <div class="rune" style="color:var(--sy-yellow)">✎ live</div>
+        <div class="title">Live editing</div>
+        <div class="body">Write in rendered Markdown blocks by default. Click a block to edit it inline, keep images and links visible, and drop into raw source whenever punctuation is the point.</div>
       </div>
       <div class="card">
         <div class="rune" style="color:var(--sy-orange)">– [ ] threads</div>
@@ -235,9 +242,46 @@ footer .links a:hover{color:var(--tx-0)}
         <div class="body">A stable graph. Star positions are laid out once, persisted, and draggable; folders appear as named clusters. Your map is a place, not a simulation.</div>
       </div>
       <div class="card">
-        <div class="rune" style="color:var(--sy-yellow)">⌘K hall</div>
+        <div class="rune" style="color:var(--sy-yellow)">↶ safe</div>
+        <div class="title">Local history</div>
+        <div class="body">Skald snapshots notes before edits, external changes, renames, deletions, and restores. Earlier versions can be previewed and brought back from inside the editor.</div>
+      </div>
+      <div class="card">
+        <div class="rune" style="color:var(--sy-blue)">⧉ files</div>
+        <div class="title">First-class attachments</div>
+        <div class="body">Pick, drop, or paste files into notes. Skald copies them into the vault with collision-safe names and portable relative Markdown links.</div>
+      </div>
+      <div class="card">
+        <div class="rune" style="color:var(--sy-purple)">⌘K hall</div>
         <div class="title">Skald's Hall</div>
         <div class="body">Fuzzy search across notes, tasks, and commands with a live preview pane. The fastest way through the hall.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- What's new -->
+<section id="new">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="kicker">VERSION 2.1 AND AFTER</div>
+      <h2>The local-first promise got more practical.</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="card">
+        <div class="rune" style="color:var(--ac)">01</div>
+        <div class="title">Recover your work</div>
+        <div class="body">Note history lives inside the vault metadata, so accidental overwrites are no longer a dramatic event. Preview an older version, restore it, and keep moving.</div>
+      </div>
+      <div class="card">
+        <div class="rune" style="color:var(--sy-blue)">02</div>
+        <div class="title">Bring files with you</div>
+        <div class="body">Images render inline, other files get compact cards, and missing attachments are called out instead of silently becoming broken Markdown.</div>
+      </div>
+      <div class="card">
+        <div class="rune" style="color:var(--sy-yellow)">03</div>
+        <div class="title">Write without choosing a mode first</div>
+        <div class="body">The default editor is live Markdown now: readable structure when you are thinking, raw text when you click into the block.</div>
       </div>
     </div>
   </div>
@@ -253,7 +297,7 @@ footer .links a:hover{color:var(--tx-0)}
     <div class="shot-grid">
       <figure>
         <div class="shot-frame"><img src="screenshots/editor.png" alt="Editor" loading="lazy"></div>
-        <figcaption><span class="num">01</span><span class="name">Editor</span><span class="sub">reading view, typed frontmatter, backlinks margin</span></figcaption>
+        <figcaption><span class="num">01</span><span class="name">Editor</span><span class="sub">live Markdown, typed frontmatter, backlinks margin</span></figcaption>
       </figure>
       <figure>
         <div class="shot-frame"><img src="screenshots/editor-src.png" alt="Source view" loading="lazy"></div>
@@ -318,7 +362,7 @@ footer .links a:hover{color:var(--tx-0)}
       <div class="key-row"><span class="action">Command palette</span><span class="combo"><kbd>⌘K</kbd><kbd>⌘P</kbd></span></div>
       <div class="key-row"><span class="action">Today's logbook</span><span class="combo"><kbd>⌘D</kbd></span></div>
       <div class="key-row"><span class="action">New note</span><span class="combo"><kbd>⌘N</kbd></span></div>
-      <div class="key-row"><span class="action">Toggle reading / source</span><span class="combo"><kbd>⌘E</kbd></span></div>
+      <div class="key-row"><span class="action">Toggle live / source</span><span class="combo"><kbd>⌘E</kbd></span></div>
       <div class="key-row"><span class="action">Toggle right panel</span><span class="combo"><kbd>⌘B</kbd></span></div>
       <div class="key-row"><span class="action">Constellation</span><span class="combo"><kbd>⌘G</kbd></span></div>
       <div class="key-row"><span class="action">Save now</span><span class="combo"><kbd>⌘S</kbd></span></div>
@@ -340,21 +384,21 @@ footer .links a:hover{color:var(--tx-0)}
       <circle cx="7" cy="19" r="1.5" style="fill:var(--bg-0);stroke:var(--tx-1);stroke-width:1.3"></circle>
     </svg>
     <h2>Begin your saga</h2>
-    <p>Your notes stay plain Markdown in a folder you own. Skald keeps its index in a <code>.skald/</code> directory — delete it and nothing of yours is lost.</p>
+    <p>Your notes stay plain Markdown in a folder you own. Skald keeps indexes, graph layout, settings, and local history in <code>.skald/</code> — delete the app metadata and your Markdown remains yours.</p>
     <div class="cta-row">
-      <a href="https://github.com/MadsenDev/skald/releases" class="btn">Download the latest release</a>
-      <a href="https://github.com/MadsenDev/skald" class="btn-ghost">Source on GitHub</a>
+      <a href="https://github.com/vardirhq/skald/releases" class="btn">Download the latest release</a>
+      <a href="https://github.com/vardirhq/skald" class="btn-ghost">Source on GitHub</a>
     </div>
-    <div class="clone-line">git clone https://github.com/MadsenDev/skald &amp;&amp; npm install &amp;&amp; npm run electron:dev</div>
+    <div class="clone-line">git clone https://github.com/vardirhq/skald &amp;&amp; npm install &amp;&amp; npm run electron:dev</div>
   </div>
 </section>
 
 <footer>
   <span>MIT © 2026 Christoffer Madsen</span>
   <div class="links">
-    <a href="https://github.com/MadsenDev/skald">GitHub</a>
-    <a href="https://github.com/MadsenDev/skald/releases">Releases</a>
-    <a href="https://github.com/MadsenDev">More projects</a>
+    <a href="https://github.com/vardirhq/skald">GitHub</a>
+    <a href="https://github.com/vardirhq/skald/releases">Releases</a>
+    <a href="https://github.com/vardirhq">More projects</a>
   </div>
 </footer>
 </div>
