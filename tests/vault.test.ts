@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { Vault } from '../src-main/vault';
 
 let dir: string;
@@ -255,5 +255,24 @@ describe('Vault end-to-end', () => {
     expect(welcome.links.length).toBe(1);
     await v.close();
     rmSync(empty, { recursive: true, force: true });
+  });
+
+  it('seeds a relative vault path without rejecting root notes', async () => {
+    const parent = mkdtempSync(join(tmpdir(), 'skald-relative-parent-'));
+    const absoluteVaultPath = join(parent, 'relative-vault');
+    const relativeVaultPath = relative(process.cwd(), absoluteVaultPath);
+    let v: Vault | null = null;
+    try {
+      v = new Vault(relativeVaultPath, () => {});
+      await v.open();
+      await v.seed();
+
+      const snap = v.snapshot();
+      expect(snap.vaultPath).toBe(absoluteVaultPath);
+      expect(snap.notes.some((n) => n.path === 'Welcome to Skald.md')).toBe(true);
+    } finally {
+      await v?.close();
+      rmSync(parent, { recursive: true, force: true });
+    }
   });
 });

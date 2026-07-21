@@ -86,7 +86,7 @@ export class Vault {
   private broadcastTimer: NodeJS.Timeout | null = null;
 
   constructor(vaultPath: string, onChange: (snapshot: VaultSnapshot) => void) {
-    this.path = vaultPath;
+    this.path = resolve(vaultPath);
     this.broadcast = () => {
       if (this.broadcastTimer) clearTimeout(this.broadcastTimer);
       this.broadcastTimer = setTimeout(() => onChange(this.snapshot()), 120);
