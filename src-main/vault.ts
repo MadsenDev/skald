@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, rm, rename, readdir, stat } from 'node:fs/promises';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname, relative, sep } from 'node:path';
+import { join, dirname, relative, sep, basename } from 'node:path';
 import { watch, type FSWatcher } from 'chokidar';
 import { parseFrontmatter, serializeFrontmatter } from '../src-shared/frontmatter';
 import { extractTasks, updateTaskLine, formatTaskLine, taskId, type TaskEdits } from '../src-shared/tasks';
@@ -29,6 +29,9 @@ import type {
   GraphData,
   NoteMeta,
   NotePayload,
+  NoteHistoryEntry,
+  NoteHistoryReason,
+  NoteHistoryVersion,
   TaskItem,
   VaultSettings,
   VaultSnapshot,
@@ -58,6 +61,8 @@ interface NoteRecord {
 
 const SKALD_DIR = '.skald';
 const ACTIVITY_CAP = 300;
+const HISTORY_CAP_PER_NOTE = 100;
+const HISTORY_COALESCE_MS = 5 * 60_000;
 
 export class Vault {
   readonly path: string;
@@ -286,9 +291,14 @@ export class Vault {
       return;
     }
     const isSelf = (this.selfWrites.get(path) ?? 0) > Date.now() - 2500;
-    this.indexFile(full).then(() => {
+    const previous = this.notes.get(path);
+    this.indexFile(full).then(async () => {
+      const current = this.notes.get(path);
       if (!isSelf && kind === 'change') {
-        const rec = this.notes.get(path);
+        if (previous && current && previous.raw !== current.raw) {
+          await this.storeHistory(path, previous.raw, 'external', true);
+        }
+        const rec = current;
         if (rec) {
           this.recordActivity({
             kind: 'note',
@@ -544,12 +554,120 @@ export class Vault {
     }
   }
 
-  async writeNote(path: string, content: string, opts: { silent?: boolean } = {}): Promise<void> {
+  private historyDir(path: string): string {
+    this.full(path); // Reject absolute paths and traversal before mapping into .skald.
+    // Encode each path segment so note history stays self-contained under .skald.
+    const segments = path.split('/').filter(Boolean).map(encodeURIComponent);
+    return join(this.path, SKALD_DIR, 'history', ...segments);
+  }
+
+  private async storeHistory(
+    path: string,
+    content: string,
+    reason: NoteHistoryReason,
+    force = false
+  ): Promise<void> {
+    const entries = await this.listNoteHistory(path);
+    const newest = entries[0];
+    if (
+      !force &&
+      reason === 'edit' &&
+      newest?.reason === 'edit' &&
+      Date.now() - newest.createdAt < HISTORY_COALESCE_MS
+    ) return;
+    if (newest) {
+      try {
+        const last = await this.readNoteHistoryVersion(path, newest.id);
+        if (last.content === content) return;
+      } catch {
+        // A damaged history entry should not prevent protecting the current note.
+      }
+    }
+
+    const dir = this.historyDir(path);
+    await mkdir(dir, { recursive: true });
+    let timestamp = Date.now();
+    while (existsSync(join(dir, `${timestamp}-${reason}.md`))) timestamp++;
+    const id = `${timestamp}-${reason}.md`;
+    await writeFile(join(dir, id), content, 'utf-8');
+
+    const after = await this.listNoteHistory(path);
+    await Promise.all(
+      after.slice(HISTORY_CAP_PER_NOTE).map((entry) => rm(join(dir, entry.id), { force: true }))
+    );
+  }
+
+  async listNoteHistory(path: string): Promise<NoteHistoryEntry[]> {
+    const dir = this.historyDir(path);
+    let names: string[];
+    try {
+      names = await readdir(dir);
+    } catch {
+      return [];
+    }
+    const entries = await Promise.all(
+      names
+        .filter((name) => /^\d+-(edit|external|rename|delete|restore)\.md$/.test(name))
+        .map(async (id): Promise<NoteHistoryEntry | null> => {
+          try {
+            const info = await stat(join(dir, id));
+            const match = id.match(/^(\d+)-(edit|external|rename|delete|restore)\.md$/);
+            if (!match) return null;
+            return {
+              id,
+              notePath: path,
+              createdAt: Number(match[1]),
+              size: info.size,
+              reason: match[2] as NoteHistoryReason,
+            };
+          } catch {
+            return null;
+          }
+        })
+    );
+    return entries
+      .filter((entry): entry is NoteHistoryEntry => entry !== null)
+      .sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  async readNoteHistoryVersion(path: string, id: string): Promise<NoteHistoryVersion> {
+    if (basename(id) !== id || !/^\d+-(edit|external|rename|delete|restore)\.md$/.test(id)) {
+      throw new Error('Invalid history version');
+    }
+    const entry = (await this.listNoteHistory(path)).find((item) => item.id === id);
+    if (!entry) throw new Error('History version not found');
+    const content = await readFile(join(this.historyDir(path), id), 'utf-8');
+    return { ...entry, content };
+  }
+
+  async restoreNoteHistoryVersion(path: string, id: string): Promise<void> {
+    const version = await this.readNoteHistoryVersion(path, id);
+    const current = this.notes.get(path);
+    if (current) await this.storeHistory(path, current.raw, 'restore', true);
+    await this.writeNote(path, version.content, { history: false, silent: true });
+    const restored = this.notes.get(path);
+    this.recordActivity({
+      kind: 'note',
+      verb: 'restored',
+      title: restored?.title ?? titleFromPath(path),
+      ref: restored?.folder || 'vault',
+      ts: Date.now(),
+    });
+    this.broadcast();
+  }
+
+  async writeNote(
+    path: string,
+    content: string,
+    opts: { silent?: boolean; history?: boolean } = {}
+  ): Promise<void> {
     const full = this.full(path);
+    const prev = this.notes.get(path);
+    if (prev?.raw === content) return;
+    if (prev && opts.history !== false) await this.storeHistory(path, prev.raw, 'edit');
     this.markSelfWrite(path);
     await mkdir(dirname(full), { recursive: true });
     await writeFile(full, content, 'utf-8');
-    const prev = this.notes.get(path);
     this.indexContent(path, content, prev?.created ?? Date.now(), Date.now());
     if (!opts.silent) {
       const rec = this.notes.get(path)!;
@@ -626,6 +744,7 @@ export class Vault {
     if (this.notes.has(newPath) || existsSync(this.full(newPath))) {
       throw new Error(`A note named “${name}” already exists there.`);
     }
+    await this.storeHistory(path, rec.raw, 'rename', true);
 
     // Update wikilinks across the vault that pointed at the old title/stem.
     for (const other of this.notes.values()) {
@@ -655,6 +774,12 @@ export class Vault {
     await mkdir(dirname(this.full(newPath)), { recursive: true });
     await rename(this.full(path), this.full(newPath));
     await writeFile(this.full(newPath), raw, 'utf-8');
+    const oldHistoryDir = this.historyDir(path);
+    const newHistoryDir = this.historyDir(newPath);
+    if (existsSync(oldHistoryDir)) {
+      await mkdir(dirname(newHistoryDir), { recursive: true });
+      await rename(oldHistoryDir, newHistoryDir);
+    }
     this.notes.delete(path);
     this.indexContent(newPath, raw, rec.created, Date.now());
     if (this.positions[path]) {
@@ -679,6 +804,7 @@ export class Vault {
 
   async deleteNote(path: string): Promise<void> {
     const rec = this.notes.get(path);
+    if (rec) await this.storeHistory(path, rec.raw, 'delete', true);
     this.markSelfWrite(path);
     try {
       await rm(this.full(path));

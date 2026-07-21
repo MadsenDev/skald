@@ -161,3 +161,18 @@ export interface NotePayload {
   bodyStartLine: number;
   backlinks: BacklinkRef[];
 }
+
+export type NoteHistoryReason = 'edit' | 'external' | 'rename' | 'delete' | 'restore';
+
+export interface NoteHistoryEntry {
+  /** Snapshot filename; opaque outside the main process. */
+  id: string;
+  notePath: string;
+  createdAt: number;
+  size: number;
+  reason: NoteHistoryReason;
+}
+
+export interface NoteHistoryVersion extends NoteHistoryEntry {
+  content: string;
+}

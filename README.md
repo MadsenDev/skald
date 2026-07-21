@@ -5,8 +5,8 @@ who kept the saga alive. Skald treats your vault the same way: notes are pages o
 tasks are open threads, and the knowledge graph is a constellation you can return to.
 
 Everything is plain Markdown files in a folder you own. Skald keeps its index, settings,
-and graph layout in a `.skald/` directory inside the vault — delete it and nothing of
-yours is lost.
+graph layout, and local note history in a `.skald/` directory inside the vault — delete
+it and your Markdown remains untouched.
 
 ![The Logbook — Skald's Today view](docs/screenshots/logbook.png)
 
@@ -25,6 +25,8 @@ yours is lost.
   activity), recently touched notes, a pinned note, and honest vault stats.
 - **The Constellation** — a stable graph. Star positions are laid out once, persisted, and
   draggable; folders appear as named clusters. Your map is a place, not a simulation.
+- **Local note history** — Skald snapshots notes before edits, external changes, renames,
+  deletions, and restores. Earlier versions can be previewed and restored from the editor.
 - **Skald's Hall** — `⌘K` fuzzy search across notes, tasks, and commands with a live
   preview pane.
 - **Three surfaces** — Midnight, Slate, and Daybreak themes; three densities; three marks.

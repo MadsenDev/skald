@@ -120,6 +120,13 @@ function registerIpc() {
     requireVault().renameNote(path, newTitle)
   );
   ipcMain.handle('note:delete', (_e, path: string) => requireVault().deleteNote(path));
+  ipcMain.handle('note:history:list', (_e, path: string) => requireVault().listNoteHistory(path));
+  ipcMain.handle('note:history:read', (_e, path: string, id: string) =>
+    requireVault().readNoteHistoryVersion(path, id)
+  );
+  ipcMain.handle('note:history:restore', (_e, path: string, id: string) =>
+    requireVault().restoreNoteHistoryVersion(path, id)
+  );
   ipcMain.handle('folder:create', (_e, path: string) => requireVault().createFolder(path));
 
   // ----- tasks -----

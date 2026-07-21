@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { NotePayload, VaultSnapshot } from '../../src-shared/types';
+import type {
+  NoteHistoryEntry,
+  NoteHistoryVersion,
+  NotePayload,
+  VaultSnapshot,
+} from '../../src-shared/types';
 import { renderMarkdown, type MdContext } from '../markdown';
 import { Rune, schemaTone } from '../ui/runes';
-import { TextDialog } from '../ui/dialogs';
+import { DialogScrim, TextDialog } from '../ui/dialogs';
 import { api } from '../api';
 import { useStore, todayISO, relTime } from '../store';
 import { taskId } from '../../src-shared/tasks';
@@ -26,6 +31,7 @@ export function EditorView({
   const [mode, setMode] = useState<'preview' | 'source'>('preview');
   const [draft, setDraft] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [lncol, setLncol] = useState<[number, number] | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -361,6 +367,21 @@ export function EditorView({
               )}
             </div>
           </div>
+
+          <div className="margin__group margin__history">
+            <button
+              className="margin__history-button"
+              disabled={dirty}
+              title={dirty ? 'Wait for the note to save before opening history' : 'Preview or restore an earlier version'}
+              onClick={() => setHistoryOpen(true)}
+            >
+              <span>
+                <strong>Note history</strong>
+                <small>Preview and restore local snapshots</small>
+              </span>
+              <span aria-hidden="true">↶</span>
+            </button>
+          </div>
         </aside>
       )}
 
@@ -378,8 +399,155 @@ export function EditorView({
           onClose={() => setRenaming(false)}
         />
       )}
+
+      {historyOpen && (
+        <HistoryDialog
+          path={path}
+          onClose={() => setHistoryOpen(false)}
+          onRestored={async () => {
+            setDraft(null);
+            setDirtyStore(path, false);
+            await load();
+            showToast('Earlier version restored');
+          }}
+        />
+      )}
     </div>
   );
+}
+
+function HistoryDialog({
+  path,
+  onClose,
+  onRestored,
+}: {
+  path: string;
+  onClose: () => void;
+  onRestored: () => Promise<void>;
+}) {
+  const [entries, setEntries] = useState<NoteHistoryEntry[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [version, setVersion] = useState<NoteHistoryVersion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void api
+      .listNoteHistory(path)
+      .then((items) => {
+        if (!alive) return;
+        setEntries(items);
+        setSelected(items[0]?.id ?? null);
+      })
+      .catch((err) => alive && setError(String((err as Error).message ?? err)))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [path]);
+
+  useEffect(() => {
+    if (!selected) {
+      setVersion(null);
+      return;
+    }
+    let alive = true;
+    setVersion(null);
+    setError(null);
+    void api
+      .readNoteHistoryVersion(path, selected)
+      .then((item) => alive && setVersion(item))
+      .catch((err) => alive && setError(String((err as Error).message ?? err)));
+    return () => {
+      alive = false;
+    };
+  }, [path, selected]);
+
+  const restore = async () => {
+    if (!selected || restoring) return;
+    setRestoring(true);
+    setError(null);
+    try {
+      await api.restoreNoteHistoryVersion(path, selected);
+      await onRestored();
+      onClose();
+    } catch (err) {
+      setError(String((err as Error).message ?? err));
+      setRestoring(false);
+    }
+  };
+
+  return (
+    <DialogScrim onClose={onClose} className="dialog--history">
+      <div className="history-dialog">
+        <div className="history-dialog__head">
+          <div>
+            <h2>Note history</h2>
+            <p className="lede">Snapshots are stored locally inside this vault.</p>
+          </div>
+          <button className="btn btn--ghost" onClick={onClose}>Close</button>
+        </div>
+        {loading ? (
+          <div className="history-dialog__empty">Loading snapshots…</div>
+        ) : entries.length === 0 ? (
+          <div className="history-dialog__empty">
+            No earlier versions yet. Skald creates one before the note changes.
+          </div>
+        ) : (
+          <div className="history-dialog__body">
+            <div className="history-dialog__list">
+              {entries.map((entry) => (
+                <button
+                  key={entry.id}
+                  aria-selected={selected === entry.id}
+                  onClick={() => setSelected(entry.id)}
+                >
+                  <strong>{formatHistoryDate(entry.createdAt)}</strong>
+                  <span>{historyReasonLabel(entry.reason)} · {formatBytes(entry.size)}</span>
+                </button>
+              ))}
+            </div>
+            <pre className="history-dialog__preview">
+              {version?.content ?? (error ? 'Unable to load this snapshot.' : 'Loading preview…')}
+            </pre>
+          </div>
+        )}
+        {error && <div className="dialog__error">{error}</div>}
+        {entries.length > 0 && (
+          <div className="dialog__actions">
+            <span className="history-dialog__warning">The current version will be saved first.</span>
+            <button className="btn btn--accent" disabled={!version || restoring} onClick={() => void restore()}>
+              {restoring ? 'Restoring…' : 'Restore this version'}
+            </button>
+          </div>
+        )}
+      </div>
+    </DialogScrim>
+  );
+}
+
+function historyReasonLabel(reason: NoteHistoryEntry['reason']): string {
+  return {
+    edit: 'Before edit',
+    external: 'External change',
+    rename: 'Before rename',
+    delete: 'Before deletion',
+    restore: 'Before restore',
+  }[reason];
+}
+
+function formatHistoryDate(ts: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(ts));
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(bytes < 10_240 ? 1 : 0)} KB`;
 }
 
 function FmRow({ k, v, ctx }: { k: string; v: unknown; ctx: MdContext }) {

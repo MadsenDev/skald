@@ -2,7 +2,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SCHEMA_NAMES, type SchemaName } from '../../src-shared/types';
 import { Rune, schemaTone } from './runes';
 
-function Scrim({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+export function DialogScrim({
+  onClose,
+  children,
+  className = '',
+}: {
+  onClose: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -15,7 +23,7 @@ function Scrim({ onClose, children }: { onClose: () => void; children: ReactNode
   }, [onClose]);
   return (
     <div className="dialog-scrim" onMouseDown={onClose}>
-      <div className="dialog" onMouseDown={(e) => e.stopPropagation()}>
+      <div className={`dialog ${className}`.trim()} onMouseDown={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -51,7 +59,7 @@ export function NewNoteDialog({
   };
 
   return (
-    <Scrim onClose={onClose}>
+    <DialogScrim onClose={onClose}>
       <h2>New note</h2>
       <p className="lede">A Markdown file in your vault, typed with a schema.</p>
       <label>Title</label>
@@ -92,7 +100,7 @@ export function NewNoteDialog({
           Create note
         </button>
       </div>
-    </Scrim>
+    </DialogScrim>
   );
 }
 
@@ -132,7 +140,7 @@ export function TextDialog({
   };
 
   return (
-    <Scrim onClose={onClose}>
+    <DialogScrim onClose={onClose}>
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
       <label>{label}</label>
@@ -152,7 +160,7 @@ export function TextDialog({
           {submitLabel}
         </button>
       </div>
-    </Scrim>
+    </DialogScrim>
   );
 }
 
@@ -172,7 +180,7 @@ export function ConfirmDialog({
   onClose: () => void;
 }) {
   return (
-    <Scrim onClose={onClose}>
+    <DialogScrim onClose={onClose}>
       <h2 className={danger ? 'danger' : undefined}>{title}</h2>
       <p className="lede">{lede}</p>
       <div className="dialog__actions">
@@ -187,6 +195,6 @@ export function ConfirmDialog({
           {confirmLabel}
         </button>
       </div>
-    </Scrim>
+    </DialogScrim>
   );
 }

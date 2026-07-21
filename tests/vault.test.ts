@@ -170,6 +170,36 @@ describe('Vault end-to-end', () => {
     expect(snap.activity[0]).toMatchObject({ kind: 'note', verb: 'created', title: 'Fresh' });
   });
 
+  it('keeps local note history and restores an earlier version', async () => {
+    vault = await makeVault();
+    const path = 'Stack decisions.md';
+    const original = vault.readNote(path).content;
+
+    await vault.writeNote(path, '# Changed\n\nA newer version.\n');
+    const history = await vault.listNoteHistory(path);
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ notePath: path, reason: 'edit' });
+
+    const version = await vault.readNoteHistoryVersion(path, history[0].id);
+    expect(version.content).toBe(original);
+
+    await vault.restoreNoteHistoryVersion(path, history[0].id);
+    expect(readFileSync(join(dir, path), 'utf-8')).toBe(original);
+    expect((await vault.listNoteHistory(path)).some((entry) => entry.reason === 'restore')).toBe(true);
+    expect(vault.snapshot().activity[0]).toMatchObject({ kind: 'note', verb: 'restored' });
+  });
+
+  it('keeps the last version when a note is deleted', async () => {
+    vault = await makeVault();
+    const path = 'Stack decisions.md';
+    const original = vault.readNote(path).content;
+    await vault.deleteNote(path);
+
+    const history = await vault.listNoteHistory(path);
+    expect(history[0].reason).toBe('delete');
+    expect((await vault.readNoteHistoryVersion(path, history[0].id)).content).toBe(original);
+  });
+
   it('seeds an empty vault with a welcome saga', async () => {
     const empty = mkdtempSync(join(tmpdir(), 'skald-empty-'));
     const v = new Vault(empty, () => {});
