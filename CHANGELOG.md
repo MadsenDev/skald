@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 - Added a live Markdown editor surface with rendered blocks that can be edited inline.
+- Added GitHub Actions workflows for CI validation and tag-driven Linux releases.
 
 ### Changed
 
