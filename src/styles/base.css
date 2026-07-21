@@ -283,7 +283,16 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 /* ============================ EDITOR ============================ */
 .editor-shell { display: grid; grid-template-columns: minmax(0,1fr) 300px; height: 100%; min-height: 0; }
 .editor-shell--no-margin { grid-template-columns: minmax(0,1fr); }
-.editor-pane { overflow-y: auto; min-height: 0; }
+.editor-pane { overflow-y: auto; min-height: 0; position: relative; }
+.editor-pane--dragging::after {
+  content: ""; position: fixed; inset: 42px 300px 0 0; pointer-events: none; z-index: 40;
+  border: 2px dashed var(--ac); background: color-mix(in oklab, var(--ac) 8%, transparent);
+}
+.editor-shell--no-margin .editor-pane--dragging::after { right: 0; }
+.editor-drop-overlay {
+  position: fixed; inset: 0; z-index: 41; pointer-events: none; display: grid; place-items: center;
+  color: var(--ac); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em;
+}
 .editor-page {
   max-width: 760px; margin: 0 auto; padding: 40px 56px 120px;
   position: relative;
@@ -295,6 +304,11 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 }
 .editor-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ac); }
 .editor-eyebrow .path { color: var(--tx-2); }
+.editor-attach-button {
+  border: 0; background: transparent; color: var(--tx-3); padding: 2px 5px;
+  font-family: var(--font-mono); font-size: 10.5px;
+}
+.editor-attach-button:hover { color: var(--ac); }
 
 .editor-title {
   font-size: 31px; line-height: 1.18; font-weight: 700; letter-spacing: -0.015em;
@@ -358,6 +372,31 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .editor-body .due { color: var(--warn); }
 .editor-body .due--ok { color: var(--tx-3); }
 
+.attachment-image {
+  display: block; margin: 22px 0; overflow: hidden; cursor: pointer;
+  background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-3);
+}
+.attachment-image:hover { border-color: var(--line-3); }
+.attachment-image img { display: block; width: 100%; max-height: 520px; object-fit: contain; background: var(--bg-0); }
+.attachment-image__caption {
+  display: block; padding: 8px 12px; color: var(--tx-3); font-family: var(--font-mono); font-size: 10.5px;
+}
+.attachment-image__missing { display: block; padding: 28px; color: var(--err); text-align: center; }
+.attachment-card {
+  display: inline-flex; align-items: center; gap: 10px; min-width: 220px; margin: 4px 3px 4px 0;
+  padding: 9px 11px; vertical-align: middle; cursor: pointer;
+  background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-2);
+}
+.attachment-card:hover { border-color: var(--ac-line); background: var(--ac-ghost); }
+.attachment-card__icon {
+  display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto;
+  background: var(--bg-3); border-radius: var(--r-1); color: var(--ac); font-family: var(--font-mono); font-size: 9px;
+}
+.attachment-card__text { display: flex; flex-direction: column; min-width: 0; }
+.editor-body .attachment-card__text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.attachment-card__text small { color: var(--tx-4); font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; }
+.attachment--missing { border-color: color-mix(in oklab, var(--err) 35%, var(--line)); cursor: default; }
+
 .editor-callout {
   margin: 22px 0; padding: 14px 16px; background: var(--ac-ghost);
   border: 1px solid var(--ac-line); border-radius: var(--r-3);
@@ -406,3 +445,18 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .margin__outline { display: flex; flex-direction: column; gap: 2px; }
 .margin__outline a { font-size: 12.5px; color: var(--tx-2); text-decoration: none; padding: 4px 8px; border-radius: var(--r-1); border-left: 2px solid var(--line); }
 .margin__outline a:hover { color: var(--tx-0); background: var(--bg-3); border-left-color: var(--ac); }
+.margin__attachment {
+  display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line);
+}
+.margin__attachment[data-missing="true"] { opacity: 0.62; }
+.margin__attachment-main {
+  min-width: 0; flex: 1; display: flex; align-items: center; gap: 9px; padding: 8px 4px;
+  border: 0; background: transparent; color: var(--tx-2); text-align: left;
+}
+.margin__attachment-main:disabled { cursor: default; }
+.margin__attachment-main > span:last-child { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.margin__attachment-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
+.margin__attachment-main small { color: var(--tx-4); font-family: var(--font-mono); font-size: 9.5px; }
+.margin__attachment-kind { color: var(--ac); font-family: var(--font-mono); font-size: 8.5px; text-transform: uppercase; }
+.margin__attachment-reveal { border: 0; background: transparent; color: var(--tx-4); padding: 5px; }
+.margin__attachment-reveal:hover { color: var(--ac); }

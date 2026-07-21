@@ -2,6 +2,7 @@ import type {
   NotePayload,
   NoteHistoryEntry,
   NoteHistoryVersion,
+  AttachmentImportResult,
   SchemaName,
   VaultSettings,
   VaultSnapshot,
@@ -10,6 +11,7 @@ import type { TaskEdits } from '../src-shared/tasks';
 
 interface Bridge {
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
+  pathForFile: (file: File) => string;
   onVaultChanged: (cb: (snapshot: unknown) => void) => () => void;
   onWindowMaximized: (cb: (maximized: boolean) => void) => () => void;
 }
@@ -48,6 +50,19 @@ export const api = {
   restoreNoteHistoryVersion: (path: string, id: string) =>
     bridge().invoke('note:history:restore', path, id) as Promise<void>,
   createFolder: (path: string) => bridge().invoke('folder:create', path) as Promise<void>,
+
+  // attachments
+  selectAttachments: (notePath: string) =>
+    bridge().invoke('attachment:select', notePath) as Promise<AttachmentImportResult[]>,
+  importAttachmentPaths: (notePath: string, paths: string[]) =>
+    bridge().invoke('attachment:importPaths', notePath, paths) as Promise<AttachmentImportResult[]>,
+  importAttachmentData: (notePath: string, fileName: string, mime: string, bytes: number[]) =>
+    bridge().invoke('attachment:importData', notePath, fileName, mime, bytes) as Promise<AttachmentImportResult>,
+  openAttachment: (path: string) => bridge().invoke('attachment:open', path) as Promise<string>,
+  revealAttachment: (path: string) => bridge().invoke('attachment:reveal', path) as Promise<void>,
+  pathForFile: (file: File) => bridge().pathForFile(file),
+  attachmentUrl: (path: string) =>
+    `skald-asset://vault/${path.split('/').map(encodeURIComponent).join('/')}`,
 
   // tasks
   updateTask: (id: string, edits: TaskEdits) =>

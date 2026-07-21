@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { extractTasks } from '../src-shared/tasks';
 import { parseWikilink } from '../src-shared/wikilinks';
+import type { AttachmentRef } from '../src-shared/types';
 
 // Markdown → React, emitting exactly the DOM the design system styles.
 // Markdown stays the storage format; this is the reading surface.
@@ -10,6 +11,9 @@ export interface MdContext {
   resolve: (target: string) => string | null;
   openNote: (path: string) => void;
   openExternal: (url: string) => void;
+  resolveAttachment: (target: string) => AttachmentRef | null;
+  openAttachment: (path: string) => void;
+  attachmentUrl: (path: string) => string;
   /** toggle the task on this 1-based raw file line */
   toggleTask: (line: number, done: boolean) => void;
   todayISO: string;
@@ -230,7 +234,7 @@ function formatDue(due: string): string {
 // ---------- inline ----------
 
 const INLINE_RE =
-  /(`[^`\n]+`)|(\[\[[^\]]+\]\])|(\*\*[^*]+\*\*)|(__[^_]+__)|(\*[^*\s][^*]*\*)|(_[^_\s][^_]*_)|(~~[^~]+~~)|(\[[^\]]+\]\((?:https?:\/\/|mailto:)[^)]+\))/;
+  /(`[^`\n]+`)|(\[\[[^\]]+\]\])|(!\[[^\]]*\]\([^)]+\))|(\*\*[^*]+\*\*)|(__[^_]+__)|(\*[^*\s][^*]*\*)|(_[^_\s][^_]*_)|(~~[^~]+~~)|(\[[^\]]+\]\([^)]+\))/;
 
 export function inline(text: string, ctx: MdContext): ReactNode {
   const nodes: ReactNode[] = [];
@@ -265,6 +269,36 @@ export function inline(text: string, ctx: MdContext): ReactNode {
           {display}
         </a>
       );
+    } else if (tok.startsWith('![')) {
+      const lm = tok.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (!lm) {
+        nodes.push(tok);
+      } else {
+        const ref = ctx.resolveAttachment(lm[2]);
+        const canOpen = !!ref?.exists && !!ref.path;
+        nodes.push(
+          <span
+            key={key++}
+            className={'attachment-image' + (canOpen ? '' : ' attachment--missing')}
+            role={canOpen ? 'button' : undefined}
+            tabIndex={canOpen ? 0 : undefined}
+            onClick={() => canOpen && ctx.openAttachment(ref!.path!)}
+            onKeyDown={(e) => {
+              if (canOpen && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                ctx.openAttachment(ref!.path!);
+              }
+            }}
+          >
+            {canOpen ? (
+              <img src={ctx.attachmentUrl(ref!.path!)} alt={lm[1]} loading="lazy" />
+            ) : (
+              <span className="attachment-image__missing">Missing image · {lm[1] || lm[2]}</span>
+            )}
+            {lm[1] && <span className="attachment-image__caption">{lm[1]}</span>}
+          </span>
+        );
+      }
     } else if (tok.startsWith('**') || tok.startsWith('__')) {
       nodes.push(<strong key={key++}>{inline(tok.slice(2, -2), ctx)}</strong>);
     } else if (tok.startsWith('~~')) {
@@ -275,20 +309,47 @@ export function inline(text: string, ctx: MdContext): ReactNode {
       const lm = tok.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (lm) {
         const url = lm[2];
-        nodes.push(
-          <a
-            key={key++}
-            className="wikilink"
-            href="#"
-            title={url}
-            onClick={(e) => {
-              e.preventDefault();
-              ctx.openExternal(url);
-            }}
-          >
-            {lm[1]}
-          </a>
-        );
+        const ref = ctx.resolveAttachment(url);
+        if (ref) {
+          const canOpen = ref.exists && !!ref.path;
+          nodes.push(
+            <span
+              key={key++}
+              className={'attachment-card' + (canOpen ? '' : ' attachment--missing')}
+              role={canOpen ? 'button' : undefined}
+              tabIndex={canOpen ? 0 : undefined}
+              title={canOpen ? ref.path! : `Missing file: ${url}`}
+              onClick={() => canOpen && ctx.openAttachment(ref.path!)}
+              onKeyDown={(e) => {
+                if (canOpen && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  ctx.openAttachment(ref.path!);
+                }
+              }}
+            >
+              <span className="attachment-card__icon">{attachmentGlyph(ref)}</span>
+              <span className="attachment-card__text">
+                <strong>{lm[1]}</strong>
+                <small>{canOpen ? ref.kind : 'missing file'}</small>
+              </span>
+            </span>
+          );
+        } else {
+          nodes.push(
+            <a
+              key={key++}
+              className="wikilink"
+              href="#"
+              title={url}
+              onClick={(e) => {
+                e.preventDefault();
+                ctx.openExternal(url);
+              }}
+            >
+              {lm[1]}
+            </a>
+          );
+        }
       } else {
         nodes.push(tok);
       }
@@ -297,4 +358,8 @@ export function inline(text: string, ctx: MdContext): ReactNode {
     }
   }
   return <Fragment>{nodes}</Fragment>;
+}
+
+function attachmentGlyph(ref: AttachmentRef): string {
+  return { image: '▧', pdf: 'PDF', audio: '♫', video: '▶', file: '◇' }[ref.kind];
 }

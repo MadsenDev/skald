@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir, rm, rename, readdir, stat } from 'node:fs/promises';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname, relative, sep, basename } from 'node:path';
+import { readFile, writeFile, mkdir, rm, rename, readdir, stat, copyFile } from 'node:fs/promises';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
+import { join, dirname, relative, sep, basename, extname, resolve } from 'node:path';
 import { watch, type FSWatcher } from 'chokidar';
 import { parseFrontmatter, serializeFrontmatter } from '../src-shared/frontmatter';
 import { extractTasks, updateTaskLine, formatTaskLine, taskId, type TaskEdits } from '../src-shared/tasks';
@@ -22,8 +22,17 @@ import {
   safeFileName,
 } from '../src-shared/notes';
 import { layoutGraph } from './layout';
+import {
+  attachmentKind,
+  attachmentMarkdown,
+  attachmentMime,
+  extractAttachmentLinks,
+  resolveAttachmentPath,
+} from '../src-shared/attachments';
 import type {
   ActivityEvent,
+  AttachmentImportResult,
+  AttachmentRef,
   BacklinkRef,
   FolderNode,
   GraphData,
@@ -506,7 +515,33 @@ export class Vault {
       body: rec.body,
       bodyStartLine: rec.bodyStartLine,
       backlinks: this.backlinksFor(rec),
+      attachments: this.attachmentsFor(rec.path, rec.body),
     };
+  }
+
+  private attachmentsFor(notePath: string, body: string): AttachmentRef[] {
+    return extractAttachmentLinks(body).map((link) => {
+      const path = resolveAttachmentPath(notePath, link.target);
+      const full = path ? this.full(path) : null;
+      const exists = !!full && existsSync(full);
+      let size: number | null = null;
+      if (exists && full) {
+        try {
+          size = statSync(full).size;
+        } catch {
+          size = null;
+        }
+      }
+      const mime = attachmentMime(path ?? link.target);
+      return {
+        ...link,
+        path,
+        exists,
+        size,
+        mime,
+        kind: attachmentKind(path ?? link.target, mime),
+      };
+    });
   }
 
   private snapshotMetaFor(path: string): NoteMeta {
@@ -544,6 +579,78 @@ export class Vault {
       throw new Error(`Path escapes vault: ${path}`);
     }
     return full;
+  }
+
+  resolveVaultFile(path: string): string {
+    return this.full(path);
+  }
+
+  private cleanAttachmentsFolder(): string {
+    const raw = this.settings.attachmentsFolder.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+    const parts = raw.split('/').filter(Boolean);
+    if (!parts.length || parts.some((part) => part === '.' || part === '..' || part.startsWith('.'))) {
+      throw new Error('The attachments folder must be a normal folder inside the vault.');
+    }
+    return parts.join('/');
+  }
+
+  private nextAttachmentPath(fileName: string): string {
+    const folder = this.cleanAttachmentsFolder();
+    const rawName = basename(fileName).replace(/[\u0000-\u001f<>:"/\\|?*]/g, ' ').replace(/\s+/g, ' ').trim();
+    const safeName = rawName && rawName !== '.' && rawName !== '..' ? rawName : 'Attachment';
+    if (/\.md$/i.test(safeName)) throw new Error('Markdown files belong in the vault as notes, not attachments.');
+    const extension = extname(safeName);
+    const stem = safeName.slice(0, safeName.length - extension.length) || 'Attachment';
+    let candidate = `${folder}/${stem}${extension}`;
+    let n = 2;
+    while (existsSync(this.full(candidate))) candidate = `${folder}/${stem} ${n++}${extension}`;
+    return candidate;
+  }
+
+  private attachmentResult(notePath: string, path: string, providedMime = ''): AttachmentImportResult {
+    const name = basename(path);
+    const mime = attachmentMime(name, providedMime);
+    const kind = attachmentKind(name, mime);
+    return { path, name, mime, kind, markdown: attachmentMarkdown(notePath, path, name, kind) };
+  }
+
+  async importAttachmentPaths(notePath: string, sourcePaths: string[]): Promise<AttachmentImportResult[]> {
+    const note = this.notes.get(notePath);
+    if (!note) throw new Error(`Note not found: ${notePath}`);
+    const out: AttachmentImportResult[] = [];
+    for (const sourcePath of sourcePaths) {
+      const source = resolve(sourcePath);
+      const info = await stat(source);
+      if (!info.isFile()) continue;
+      const destination = this.nextAttachmentPath(basename(source));
+      const fullDestination = this.full(destination);
+      await mkdir(dirname(fullDestination), { recursive: true });
+      await copyFile(source, fullDestination);
+      this.folders.add(this.cleanAttachmentsFolder());
+      out.push(this.attachmentResult(notePath, destination));
+      this.recordActivity({ kind: 'note', verb: 'attached', title: basename(destination), ref: note.title, ts: Date.now() });
+    }
+    if (out.length) this.broadcast();
+    return out;
+  }
+
+  async importAttachmentData(
+    notePath: string,
+    fileName: string,
+    mime: string,
+    bytes: number[] | Uint8Array
+  ): Promise<AttachmentImportResult> {
+    const note = this.notes.get(notePath);
+    if (!note) throw new Error(`Note not found: ${notePath}`);
+    const destination = this.nextAttachmentPath(fileName);
+    const fullDestination = this.full(destination);
+    await mkdir(dirname(fullDestination), { recursive: true });
+    await writeFile(fullDestination, Buffer.from(bytes));
+    this.folders.add(this.cleanAttachmentsFolder());
+    const result = this.attachmentResult(notePath, destination, mime);
+    this.recordActivity({ kind: 'note', verb: 'attached', title: result.name, ref: note.title, ts: Date.now() });
+    this.broadcast();
+    return result;
   }
 
   private markSelfWrite(path: string): void {

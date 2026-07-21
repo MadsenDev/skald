@@ -124,6 +124,7 @@ export interface VaultSettings {
   marginOn: boolean;
   pinnedNote: string | null;
   dailyFolder: string;
+  attachmentsFolder: string;
   editorFontSize: number;
   autosaveMs: number;
 }
@@ -135,6 +136,7 @@ export const DEFAULT_SETTINGS: VaultSettings = {
   marginOn: true,
   pinnedNote: null,
   dailyFolder: 'Daily',
+  attachmentsFolder: 'Attachments',
   editorFontSize: 15,
   autosaveMs: 800,
 };
@@ -160,6 +162,30 @@ export interface NotePayload {
   /** line offset of the body within the raw content */
   bodyStartLine: number;
   backlinks: BacklinkRef[];
+  attachments: AttachmentRef[];
+}
+
+export type AttachmentKind = 'image' | 'pdf' | 'audio' | 'video' | 'file';
+
+export interface AttachmentRef {
+  /** Target exactly as written in Markdown. */
+  target: string;
+  /** Resolved vault-relative path, or null when the target escapes the vault. */
+  path: string | null;
+  label: string;
+  embedded: boolean;
+  exists: boolean;
+  mime: string;
+  kind: AttachmentKind;
+  size: number | null;
+}
+
+export interface AttachmentImportResult {
+  path: string;
+  name: string;
+  mime: string;
+  kind: AttachmentKind;
+  markdown: string;
 }
 
 export type NoteHistoryReason = 'edit' | 'external' | 'rename' | 'delete' | 'restore';

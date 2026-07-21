@@ -1,6 +1,6 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } from 'electron';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { existsSync } from 'node:fs';
 import { Vault } from './vault';
 import { loadAppConfig, saveAppConfig } from './config';
@@ -11,6 +11,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let mainWindow: BrowserWindow | null = null;
 let vault: Vault | null = null;
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'skald-asset', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+]);
 
 function createWindow() {
   const cfg = loadAppConfig();
@@ -68,6 +72,16 @@ function requireVault(): Vault {
 }
 
 app.whenReady().then(() => {
+  protocol.handle('skald-asset', (request) => {
+    try {
+      const url = new URL(request.url);
+      if (url.host !== 'vault') return new Response('Not found', { status: 404 });
+      const path = decodeURIComponent(url.pathname.replace(/^\/+/, ''));
+      return net.fetch(pathToFileURL(requireVault().resolveVaultFile(path)).toString());
+    } catch {
+      return new Response('Not found', { status: 404 });
+    }
+  });
   registerIpc();
   createWindow();
   app.on('activate', () => {
@@ -128,6 +142,30 @@ function registerIpc() {
     requireVault().restoreNoteHistoryVersion(path, id)
   );
   ipcMain.handle('folder:create', (_e, path: string) => requireVault().createFolder(path));
+
+  // ----- attachments -----
+  ipcMain.handle('attachment:select', async (_e, notePath: string) => {
+    if (!mainWindow) return [];
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Attach files',
+      properties: ['openFile', 'multiSelections'],
+    });
+    return result.canceled ? [] : requireVault().importAttachmentPaths(notePath, result.filePaths);
+  });
+  ipcMain.handle('attachment:importPaths', (_e, notePath: string, paths: string[]) =>
+    requireVault().importAttachmentPaths(notePath, paths)
+  );
+  ipcMain.handle(
+    'attachment:importData',
+    (_e, notePath: string, fileName: string, mime: string, bytes: number[] | Uint8Array) =>
+      requireVault().importAttachmentData(notePath, fileName, mime, bytes)
+  );
+  ipcMain.handle('attachment:open', (_e, path: string) =>
+    shell.openPath(requireVault().resolveVaultFile(path))
+  );
+  ipcMain.handle('attachment:reveal', (_e, path: string) => {
+    shell.showItemInFolder(requireVault().resolveVaultFile(path));
+  });
 
   // ----- tasks -----
   ipcMain.handle('task:update', (_e, id: string, edits: TaskEdits) =>

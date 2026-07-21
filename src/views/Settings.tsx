@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { VaultSnapshot, VaultSettings } from '../../src-shared/types';
 import { SCHEMA_NAMES } from '../../src-shared/types';
 import { Rune, schemaTone } from '../ui/runes';
@@ -312,6 +312,13 @@ function VaultPane({
         </span>
       </Row>
 
+      <Row title="Attachments folder" desc="Imported files are copied here and linked with portable relative Markdown paths.">
+        <AttachmentFolderSetting
+          value={s.attachmentsFolder}
+          save={(attachmentsFolder) => set({ attachmentsFolder })}
+        />
+      </Row>
+
       <Row title="Reveal" desc="Open the vault folder in your file manager.">
         <button className="btn" onClick={() => void api.revealInFolder()}>
           Reveal in file manager
@@ -324,6 +331,36 @@ function VaultPane({
         </button>
       </Row>
     </>
+  );
+}
+
+function AttachmentFolderSetting({
+  value,
+  save,
+}: {
+  value: string;
+  save: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+
+  const commit = () => {
+    const clean = draft.trim().replace(/^\/+|\/+$/g, '') || 'Attachments';
+    setDraft(clean);
+    if (clean !== value) save(clean);
+  };
+
+  return (
+    <input
+      className="settings__text-input"
+      value={draft}
+      spellCheck={false}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+    />
   );
 }
 

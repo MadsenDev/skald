@@ -27,6 +27,9 @@ it and your Markdown remains untouched.
   draggable; folders appear as named clusters. Your map is a place, not a simulation.
 - **Local note history** — Skald snapshots notes before edits, external changes, renames,
   deletions, and restores. Earlier versions can be previewed and restored from the editor.
+- **First-class attachments** — pick or drop any file, paste clipboard images, and Skald
+  copies them into the vault with collision-safe names and portable relative Markdown links.
+  Images render inline; files can be opened or revealed from the editor.
 - **Skald's Hall** — `⌘K` fuzzy search across notes, tasks, and commands with a live
   preview pane.
 - **Three surfaces** — Midnight, Slate, and Daybreak themes; three densities; three marks.

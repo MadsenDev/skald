@@ -92,6 +92,47 @@ describe('Vault end-to-end', () => {
     expect(payload.bodyStartLine).toBe(5);
   });
 
+  it('imports attachments with unique names and reports missing files', async () => {
+    vault = await makeVault();
+    const sourceDir = mkdtempSync(join(tmpdir(), 'skald-source-'));
+    const source = join(sourceDir, 'Product map.png');
+    writeFileSync(source, Buffer.from([137, 80, 78, 71]));
+
+    const [first] = await vault.importAttachmentPaths('Projects/Jormungandr.md', [source]);
+    const second = await vault.importAttachmentData(
+      'Projects/Jormungandr.md',
+      'Product map.png',
+      'image/png',
+      [1, 2, 3]
+    );
+
+    expect(first.path).toBe('Attachments/Product map.png');
+    expect(first.markdown).toBe('![Product map.png](../Attachments/Product%20map.png)');
+    expect(second.path).toBe('Attachments/Product map 2.png');
+    expect(readFileSync(join(dir, first.path))).toEqual(Buffer.from([137, 80, 78, 71]));
+
+    const note = vault.readNote('Projects/Jormungandr.md');
+    await vault.writeNote(
+      note.meta.path,
+      `${note.content}\n${first.markdown}\n[Missing](../Attachments/gone.pdf)\n`
+    );
+    const attachments = vault.readNote(note.meta.path).attachments;
+    expect(attachments[0]).toMatchObject({
+      path: first.path,
+      exists: true,
+      kind: 'image',
+      embedded: true,
+    });
+    expect(attachments[1]).toMatchObject({
+      path: 'Attachments/gone.pdf',
+      exists: false,
+      kind: 'pdf',
+    });
+    expect(vault.snapshot().activity.some((event) => event.verb === 'attached')).toBe(true);
+
+    rmSync(sourceDir, { recursive: true, force: true });
+  });
+
   it('toggles a task and writes the file', async () => {
     vault = await makeVault();
     const snap = vault.snapshot();
